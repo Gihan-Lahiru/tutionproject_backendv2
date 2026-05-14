@@ -1,0 +1,8 @@
+{
+  "name": "tuition-sir",
+  "$schema": "node_modules/@nestjs/cli/lib/schematics/collection.json",
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "deleteOutDir": true
+  }
+}
