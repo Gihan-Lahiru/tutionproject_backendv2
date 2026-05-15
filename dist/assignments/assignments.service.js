@@ -18,11 +18,17 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const assignment_entity_1 = require("../database/entities/assignment.entity");
 const submission_entity_1 = require("../database/entities/submission.entity");
+const class_entity_1 = require("../database/entities/class.entity");
+const notification_entity_1 = require("../database/entities/notification.entity");
+const user_entity_1 = require("../database/entities/user.entity");
 const uuid_1 = require("uuid");
 let AssignmentsService = class AssignmentsService {
-    constructor(assignmentRepository, submissionRepository) {
+    constructor(assignmentRepository, submissionRepository, classRepository, notificationRepository, userRepository) {
         this.assignmentRepository = assignmentRepository;
         this.submissionRepository = submissionRepository;
+        this.classRepository = classRepository;
+        this.notificationRepository = notificationRepository;
+        this.userRepository = userRepository;
     }
     async create(createAssignmentDto, classId) {
         const assignment = this.assignmentRepository.create({
@@ -30,7 +36,34 @@ let AssignmentsService = class AssignmentsService {
             ...createAssignmentDto,
             classId,
         });
-        return this.assignmentRepository.save(assignment);
+        const saved = await this.assignmentRepository.save(assignment);
+        // Create notifications for students in this class (filter by institute/location)
+        try {
+            const fullClass = await this.classRepository.findOne({ where: { id: classId }, relations: ['students'] });
+            const classLocation = String(fullClass?.location || '').trim().toLowerCase();
+            const classStudents = Array.isArray(fullClass?.students) ? fullClass.students : [];
+            const targetStudents = classStudents.filter((student) => {
+                const studentInstitute = String(student?.institute || '').trim().toLowerCase();
+                if (!classLocation)
+                    return true;
+                return studentInstitute === classLocation;
+            });
+            if (targetStudents.length) {
+                const message = `${createAssignmentDto.title || 'New assignment'} posted for ${fullClass?.title || fullClass?.name || 'your class'}`;
+                const notifications = targetStudents.map((student) => ({
+                    id: (0, uuid_1.v4)(),
+                    userId: student.id,
+                    type: 'assignment',
+                    message,
+                    read: 0,
+                }));
+                await this.notificationRepository.save(notifications);
+            }
+        }
+        catch (e) {
+            console.warn('Failed to create notifications for assignment', e?.message || e);
+        }
+        return saved;
     }
     async findByClass(classId) {
         return this.assignmentRepository.find({
@@ -89,7 +122,13 @@ exports.AssignmentsService = AssignmentsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(assignment_entity_1.Assignment)),
     __param(1, (0, typeorm_1.InjectRepository)(submission_entity_1.Submission)),
+    __param(2, (0, typeorm_1.InjectRepository)(class_entity_1.Class)),
+    __param(3, (0, typeorm_1.InjectRepository)(notification_entity_1.Notification)),
+    __param(4, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], AssignmentsService);
 //# sourceMappingURL=assignments.service.js.map

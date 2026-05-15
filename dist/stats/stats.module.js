@@ -15,6 +15,7 @@ const class_entity_1 = require("../database/entities/class.entity");
 const payment_entity_1 = require("../database/entities/payment.entity");
 const video_entity_1 = require("../database/entities/video.entity");
 const paper_entity_1 = require("../database/entities/paper.entity");
+const assignment_entity_1 = require("../database/entities/assignment.entity");
 const user_entity_1 = require("../database/entities/user.entity");
 const announcement_entity_1 = require("../database/entities/announcement.entity");
 let StatsModule = class StatsModule {
@@ -22,7 +23,7 @@ let StatsModule = class StatsModule {
 exports.StatsModule = StatsModule;
 exports.StatsModule = StatsModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([class_entity_1.Class, payment_entity_1.Payment, video_entity_1.Video, paper_entity_1.Paper, user_entity_1.User, announcement_entity_1.Announcement])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([class_entity_1.Class, payment_entity_1.Payment, video_entity_1.Video, paper_entity_1.Paper, user_entity_1.User, announcement_entity_1.Announcement, assignment_entity_1.Assignment])],
         controllers: [stats_controller_1.StatsController],
         providers: [stats_service_1.StatsService],
         exports: [stats_service_1.StatsService],

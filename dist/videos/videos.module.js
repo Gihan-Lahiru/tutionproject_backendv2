@@ -12,12 +12,15 @@ const typeorm_1 = require("@nestjs/typeorm");
 const videos_controller_1 = require("./videos.controller");
 const videos_service_1 = require("./videos.service");
 const video_entity_1 = require("../database/entities/video.entity");
+const class_entity_1 = require("../database/entities/class.entity");
+const notification_entity_1 = require("../database/entities/notification.entity");
+const user_entity_1 = require("../database/entities/user.entity");
 let VideosModule = class VideosModule {
 };
 exports.VideosModule = VideosModule;
 exports.VideosModule = VideosModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([video_entity_1.Video])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([video_entity_1.Video, class_entity_1.Class, notification_entity_1.Notification, user_entity_1.User])],
         controllers: [videos_controller_1.VideosController],
         providers: [videos_service_1.VideosService],
         exports: [videos_service_1.VideosService],

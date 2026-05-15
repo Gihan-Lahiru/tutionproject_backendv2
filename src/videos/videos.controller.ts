@@ -24,6 +24,24 @@ export class VideosController {
     const user = req.user as any;
     return this.videosService.create({
       ...createVideoDto,
+      videoUrl: createVideoDto.videoUrl || createVideoDto.url,
+      thumbnailUrl: createVideoDto.thumbnailUrl || createVideoDto.thumbnail_url,
+      teacherId: user?.id,
+    });
+  }
+
+  @Post('class/:classId')
+  async createForClass(
+    @Param('classId') classId: string,
+    @Body() createVideoDto: any,
+    @Req() req: Request,
+  ) {
+    const user = req.user as any;
+    return this.videosService.create({
+      ...createVideoDto,
+      videoUrl: createVideoDto.videoUrl || createVideoDto.url,
+      thumbnailUrl: createVideoDto.thumbnailUrl || createVideoDto.thumbnail_url,
+      classId,
       teacherId: user?.id,
     });
   }
@@ -31,6 +49,11 @@ export class VideosController {
   @Get()
   async findAll() {
     return this.videosService.findAll();
+  }
+
+  @Get('class/:classId')
+  async findByClass(@Param('classId') classId: string) {
+    return this.videosService.findByClass(classId);
   }
 
   @Get('search')

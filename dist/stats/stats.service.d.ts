@@ -3,6 +3,7 @@ import { Class } from '../database/entities/class.entity';
 import { Payment } from '../database/entities/payment.entity';
 import { Video } from '../database/entities/video.entity';
 import { Paper } from '../database/entities/paper.entity';
+import { Assignment } from '../database/entities/assignment.entity';
 import { User } from '../database/entities/user.entity';
 import { Announcement } from '../database/entities/announcement.entity';
 export declare class StatsService {
@@ -10,9 +11,10 @@ export declare class StatsService {
     private paymentRepository;
     private videoRepository;
     private paperRepository;
+    private assignmentRepository;
     private userRepository;
     private announcementRepository;
-    constructor(classRepository: Repository<Class>, paymentRepository: Repository<Payment>, videoRepository: Repository<Video>, paperRepository: Repository<Paper>, userRepository: Repository<User>, announcementRepository: Repository<Announcement>);
+    constructor(classRepository: Repository<Class>, paymentRepository: Repository<Payment>, videoRepository: Repository<Video>, paperRepository: Repository<Paper>, assignmentRepository: Repository<Assignment>, userRepository: Repository<User>, announcementRepository: Repository<Announcement>);
     getDashboardStats(): Promise<{
         totalUsers: number;
         totalClasses: number;

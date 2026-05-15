@@ -13,13 +13,16 @@ const assignments_controller_1 = require("./assignments.controller");
 const assignments_service_1 = require("./assignments.service");
 const assignment_entity_1 = require("../database/entities/assignment.entity");
 const submission_entity_1 = require("../database/entities/submission.entity");
+const class_entity_1 = require("../database/entities/class.entity");
+const notification_entity_1 = require("../database/entities/notification.entity");
+const user_entity_1 = require("../database/entities/user.entity");
 let AssignmentsModule = class AssignmentsModule {
 };
 exports.AssignmentsModule = AssignmentsModule;
 exports.AssignmentsModule = AssignmentsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([assignment_entity_1.Assignment, submission_entity_1.Submission]),
+            typeorm_1.TypeOrmModule.forFeature([assignment_entity_1.Assignment, submission_entity_1.Submission, class_entity_1.Class, notification_entity_1.Notification, user_entity_1.User]),
         ],
         controllers: [assignments_controller_1.AssignmentsController],
         providers: [assignments_service_1.AssignmentsService],

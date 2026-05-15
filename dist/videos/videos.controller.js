@@ -24,11 +24,26 @@ let VideosController = class VideosController {
         const user = req.user;
         return this.videosService.create({
             ...createVideoDto,
+            videoUrl: createVideoDto.videoUrl || createVideoDto.url,
+            thumbnailUrl: createVideoDto.thumbnailUrl || createVideoDto.thumbnail_url,
+            teacherId: user?.id,
+        });
+    }
+    async createForClass(classId, createVideoDto, req) {
+        const user = req.user;
+        return this.videosService.create({
+            ...createVideoDto,
+            videoUrl: createVideoDto.videoUrl || createVideoDto.url,
+            thumbnailUrl: createVideoDto.thumbnailUrl || createVideoDto.thumbnail_url,
+            classId,
             teacherId: user?.id,
         });
     }
     async findAll() {
         return this.videosService.findAll();
+    }
+    async findByClass(classId) {
+        return this.videosService.findByClass(classId);
     }
     async findByGradeAndSubject(grade, subject) {
         return this.videosService.findByGradeAndSubject(grade, subject);
@@ -53,11 +68,27 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], VideosController.prototype, "create", null);
 __decorate([
+    (0, common_1.Post)('class/:classId'),
+    __param(0, (0, common_1.Param)('classId')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], VideosController.prototype, "createForClass", null);
+__decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], VideosController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('class/:classId'),
+    __param(0, (0, common_1.Param)('classId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], VideosController.prototype, "findByClass", null);
 __decorate([
     (0, common_1.Get)('search'),
     __param(0, (0, common_1.Query)('grade')),

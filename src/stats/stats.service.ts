@@ -5,6 +5,7 @@ import { Class } from '../database/entities/class.entity';
 import { Payment } from '../database/entities/payment.entity';
 import { Video } from '../database/entities/video.entity';
 import { Paper } from '../database/entities/paper.entity';
+import { Assignment } from '../database/entities/assignment.entity';
 import { User } from '../database/entities/user.entity';
 import { Announcement } from '../database/entities/announcement.entity';
 
@@ -15,6 +16,7 @@ export class StatsService {
     @InjectRepository(Payment) private paymentRepository: Repository<Payment>,
     @InjectRepository(Video) private videoRepository: Repository<Video>,
     @InjectRepository(Paper) private paperRepository: Repository<Paper>,
+    @InjectRepository(Assignment) private assignmentRepository: Repository<Assignment>,
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Announcement) private announcementRepository: Repository<Announcement>,
   ) {}
@@ -152,6 +154,28 @@ export class StatsService {
           timestamp: announcement.createdAt,
           created_at: announcement.createdAt,
           class_id: announcement.classId,
+        });
+      });
+
+      // Get recent assignments created by this teacher
+      const recentAssignments = await this.assignmentRepository.find({
+        where: { /* assignments createdBy not tracked here; fallback to class teacher */ },
+        order: { createdAt: 'DESC' },
+        take: 5,
+      });
+
+      // Filter assignments by teacher's classes
+      const teacherClassIds = (await this.classRepository.find({ where: { teacherId }, select: ['id'] })).map(c => c.id);
+      recentAssignments.forEach((assignment) => {
+        if (!teacherClassIds.includes(assignment.classId)) return;
+        activities.push({
+          id: assignment.id,
+          type: 'assignment',
+          title: `Created assignment: ${assignment.title}`,
+          description: assignment.description || '',
+          timestamp: assignment.createdAt,
+          created_at: assignment.createdAt,
+          class_id: assignment.classId,
         });
       });
 

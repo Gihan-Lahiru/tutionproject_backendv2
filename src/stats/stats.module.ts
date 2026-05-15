@@ -6,11 +6,12 @@ import { Class } from '../database/entities/class.entity';
 import { Payment } from '../database/entities/payment.entity';
 import { Video } from '../database/entities/video.entity';
 import { Paper } from '../database/entities/paper.entity';
+import { Assignment } from '../database/entities/assignment.entity';
 import { User } from '../database/entities/user.entity';
 import { Announcement } from '../database/entities/announcement.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Class, Payment, Video, Paper, User, Announcement])],
+  imports: [TypeOrmModule.forFeature([Class, Payment, Video, Paper, User, Announcement, Assignment])],
   controllers: [StatsController],
   providers: [StatsService],
   exports: [StatsService],

@@ -6,6 +6,7 @@ export declare class Video {
     grade?: string;
     subject?: string;
     description?: string;
+    classId?: string;
     teacherId?: string;
     createdAt: Date;
     updatedAt: Date;

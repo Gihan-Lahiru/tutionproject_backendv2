@@ -20,14 +20,16 @@ const class_entity_1 = require("../database/entities/class.entity");
 const payment_entity_1 = require("../database/entities/payment.entity");
 const video_entity_1 = require("../database/entities/video.entity");
 const paper_entity_1 = require("../database/entities/paper.entity");
+const assignment_entity_1 = require("../database/entities/assignment.entity");
 const user_entity_1 = require("../database/entities/user.entity");
 const announcement_entity_1 = require("../database/entities/announcement.entity");
 let StatsService = class StatsService {
-    constructor(classRepository, paymentRepository, videoRepository, paperRepository, userRepository, announcementRepository) {
+    constructor(classRepository, paymentRepository, videoRepository, paperRepository, assignmentRepository, userRepository, announcementRepository) {
         this.classRepository = classRepository;
         this.paymentRepository = paymentRepository;
         this.videoRepository = videoRepository;
         this.paperRepository = paperRepository;
+        this.assignmentRepository = assignmentRepository;
         this.userRepository = userRepository;
         this.announcementRepository = announcementRepository;
     }
@@ -150,6 +152,27 @@ let StatsService = class StatsService {
                     timestamp: announcement.createdAt,
                     created_at: announcement.createdAt,
                     class_id: announcement.classId,
+                });
+            });
+            // Get recent assignments created by this teacher
+            const recentAssignments = await this.assignmentRepository.find({
+                where: { /* assignments createdBy not tracked here; fallback to class teacher */},
+                order: { createdAt: 'DESC' },
+                take: 5,
+            });
+            // Filter assignments by teacher's classes
+            const teacherClassIds = (await this.classRepository.find({ where: { teacherId }, select: ['id'] })).map(c => c.id);
+            recentAssignments.forEach((assignment) => {
+                if (!teacherClassIds.includes(assignment.classId))
+                    return;
+                activities.push({
+                    id: assignment.id,
+                    type: 'assignment',
+                    title: `Created assignment: ${assignment.title}`,
+                    description: assignment.description || '',
+                    timestamp: assignment.createdAt,
+                    created_at: assignment.createdAt,
+                    class_id: assignment.classId,
                 });
             });
             // Get recent videos uploaded by this teacher
@@ -349,9 +372,11 @@ exports.StatsService = StatsService = __decorate([
     __param(1, (0, typeorm_1.InjectRepository)(payment_entity_1.Payment)),
     __param(2, (0, typeorm_1.InjectRepository)(video_entity_1.Video)),
     __param(3, (0, typeorm_1.InjectRepository)(paper_entity_1.Paper)),
-    __param(4, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
-    __param(5, (0, typeorm_1.InjectRepository)(announcement_entity_1.Announcement)),
+    __param(4, (0, typeorm_1.InjectRepository)(assignment_entity_1.Assignment)),
+    __param(5, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __param(6, (0, typeorm_1.InjectRepository)(announcement_entity_1.Announcement)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
         typeorm_2.Repository,
