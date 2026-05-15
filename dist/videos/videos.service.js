@@ -35,7 +35,7 @@ let VideosService = class VideosService {
             thumbnailUrl: createVideoDto.thumbnailUrl || createVideoDto.thumbnail_url,
             ...createVideoDto,
         });
-        const saved = await this.videoRepository.save(video);
+        const saved = (await this.videoRepository.save(video));
         try {
             const classId = String(saved.classId || createVideoDto.classId || '').trim();
             const grade = String(saved.grade || createVideoDto.grade || '').trim();

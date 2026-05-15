@@ -2,6 +2,7 @@ import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
@@ -16,6 +17,9 @@ export declare class AuthController {
             grade: string;
             institute: string;
         };
+    }>;
+    verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<{
+        message: string;
     }>;
     getCurrentUser(req: Request): Promise<Express.User>;
 }

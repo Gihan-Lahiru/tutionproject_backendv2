@@ -3,8 +3,8 @@ import { Request } from 'express';
 export declare class VideosController {
     private videosService;
     constructor(videosService: VideosService);
-    create(createVideoDto: any, req: Request): Promise<import("../database/entities/video.entity").Video[]>;
-    createForClass(classId: string, createVideoDto: any, req: Request): Promise<import("../database/entities/video.entity").Video[]>;
+    create(createVideoDto: any, req: Request): Promise<import("../database/entities/video.entity").Video>;
+    createForClass(classId: string, createVideoDto: any, req: Request): Promise<import("../database/entities/video.entity").Video>;
     findAll(): Promise<import("../database/entities/video.entity").Video[]>;
     findByClass(classId: string): Promise<import("../database/entities/video.entity").Video[]>;
     findByGradeAndSubject(grade: string, subject: string): Promise<import("../database/entities/video.entity").Video[]>;

@@ -9,7 +9,7 @@ export declare class VideosService {
     private notificationRepository;
     private userRepository;
     constructor(videoRepository: Repository<Video>, classRepository: Repository<Class>, notificationRepository: Repository<Notification>, userRepository: Repository<User>);
-    create(createVideoDto: any): Promise<Video[]>;
+    create(createVideoDto: any): Promise<Video>;
     findByClass(classId: string): Promise<Video[]>;
     findAll(): Promise<Video[]>;
     findByGradeAndSubject(grade: string, subject: string): Promise<Video[]>;

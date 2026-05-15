@@ -25,7 +25,7 @@ export class VideosService {
       ...createVideoDto,
     });
 
-    const saved = await this.videoRepository.save(video);
+    const saved = (await this.videoRepository.save(video)) as unknown as Video;
 
     try {
       const classId = String(saved.classId || createVideoDto.classId || '').trim();

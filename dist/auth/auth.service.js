@@ -121,6 +121,22 @@ let AuthService = class AuthService {
             response.verificationCode = verificationCode;
         return response;
     }
+    async verifyEmail(email, code) {
+        const user = await this.userRepository.findOne({ where: { email } });
+        if (!user) {
+            throw new common_1.BadRequestException('User not found');
+        }
+        if (user.emailVerified) {
+            return { message: 'Email already verified' };
+        }
+        if (!user.emailVerificationCode || user.emailVerificationCode !== code) {
+            throw new common_1.BadRequestException('Invalid verification code');
+        }
+        user.emailVerified = true;
+        user.emailVerificationCode = null;
+        await this.userRepository.save(user);
+        return { message: 'Email verified successfully' };
+    }
     normalizeGrade(value) {
         const raw = String(value || '').trim();
         if (!raw)
@@ -185,6 +201,9 @@ let AuthService = class AuthService {
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
             throw new common_1.UnauthorizedException('Invalid credentials');
+        }
+        if (user.emailVerificationCode && !user.emailVerified) {
+            throw new common_1.UnauthorizedException('Please verify your email before logging in');
         }
         const token = this.jwtService.sign({
             id: user.id,
