@@ -11,6 +11,7 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const passport_1 = require("@nestjs/passport");
 const typeorm_1 = require("@nestjs/typeorm");
+const mailer_1 = require("@nestjs-modules/mailer");
 const config_1 = require("@nestjs/config");
 const auth_controller_1 = require("./auth.controller");
 const auth_service_1 = require("./auth.service");
@@ -25,6 +26,23 @@ exports.AuthModule = AuthModule = __decorate([
         imports: [
             config_1.ConfigModule,
             typeorm_1.TypeOrmModule.forFeature([user_entity_1.User, class_entity_1.Class]),
+            mailer_1.MailerModule.forRootAsync({
+                imports: [config_1.ConfigModule],
+                inject: [config_1.ConfigService],
+                useFactory: (config) => ({
+                    transport: {
+                        host: config.get('MAIL_HOST'),
+                        port: Number(config.get('MAIL_PORT')) || 587,
+                        auth: {
+                            user: config.get('MAIL_USER'),
+                            pass: config.get('MAIL_PASSWORD'),
+                        },
+                    },
+                    defaults: {
+                        from: config.get('MAIL_USER') || 'no-reply@example.com',
+                    },
+                }),
+            }),
             passport_1.PassportModule,
             jwt_1.JwtModule.registerAsync({
                 inject: [config_1.ConfigService],

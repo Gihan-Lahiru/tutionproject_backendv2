@@ -41,6 +41,12 @@ export class User {
   @Column('text', { nullable: true })
   institute?: string;
 
+  @Column('text', { nullable: true })
+  emailVerificationCode?: string;
+
+  @Column('boolean', { default: false })
+  emailVerified: boolean;
+
   @Column('text', { default: 'active' })
   status: string; // active, inactive, suspended
 

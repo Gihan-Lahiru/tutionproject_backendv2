@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -32,7 +33,8 @@ export class AuthService {
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Class) private classRepository: Repository<Class>,
     private jwtService: JwtService,
-  ) {}
+      private mailerService: MailerService,
+    ) {}
 
   async register(registerDto: RegisterDto) {
     const { email, password, name, role, grade, institute } = registerDto;
@@ -61,7 +63,29 @@ export class AuthService {
       await this.ensureDefaultGradeClassesAndEnrollStudent(user);
     }
 
-    return { message: 'User registered successfully', userId: user.id };
+    // Generate verification code and save to user
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    user.emailVerificationCode = verificationCode;
+    user.emailVerified = false;
+    await this.userRepository.save(user);
+
+    // Try to send verification email; if sending fails, return code in response for testing
+    let mailSent = false;
+    try {
+      await this.mailerService.sendMail({
+        to: user.email,
+        subject: 'Welcome to Tuition Sir - Verify your email',
+        text: `Hello ${user.name},\n\nYour verification code is: ${verificationCode}`,
+      });
+      mailSent = true;
+    } catch (e) {
+      console.warn('Failed to send verification email:', e);
+    }
+
+    const response: any = { message: 'User registered successfully', userId: user.id };
+    if (!mailSent) response.verificationCode = verificationCode;
+
+    return response;
   }
 
   private normalizeGrade(value?: string) {

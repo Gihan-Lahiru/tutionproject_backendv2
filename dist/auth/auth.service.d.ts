@@ -1,3 +1,4 @@
+import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import { User } from '../database/entities/user.entity';
@@ -8,13 +9,11 @@ export declare class AuthService {
     private userRepository;
     private classRepository;
     private jwtService;
+    private mailerService;
     private readonly defaultGrades;
     private readonly defaultClassTemplates;
-    constructor(userRepository: Repository<User>, classRepository: Repository<Class>, jwtService: JwtService);
-    register(registerDto: RegisterDto): Promise<{
-        message: string;
-        userId: string;
-    }>;
+    constructor(userRepository: Repository<User>, classRepository: Repository<Class>, jwtService: JwtService, mailerService: MailerService);
+    register(registerDto: RegisterDto): Promise<any>;
     private normalizeGrade;
     private ensureDefaultGradeClassesAndEnrollStudent;
     private ensureAllDefaultGradeClasses;

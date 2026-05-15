@@ -11,6 +11,8 @@ export declare class User {
     grade?: string;
     phone?: string;
     institute?: string;
+    emailVerificationCode?: string;
+    emailVerified: boolean;
     status: string;
     currentSessionId?: string;
     createdAt: Date;

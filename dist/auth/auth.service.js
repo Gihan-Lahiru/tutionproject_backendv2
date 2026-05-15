@@ -47,6 +47,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
+const mailer_1 = require("@nestjs-modules/mailer");
 const jwt_1 = require("@nestjs/jwt");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
@@ -55,10 +56,11 @@ const user_entity_1 = require("../database/entities/user.entity");
 const class_entity_1 = require("../database/entities/class.entity");
 const uuid_1 = require("uuid");
 let AuthService = class AuthService {
-    constructor(userRepository, classRepository, jwtService) {
+    constructor(userRepository, classRepository, jwtService, mailerService) {
         this.userRepository = userRepository;
         this.classRepository = classRepository;
         this.jwtService = jwtService;
+        this.mailerService = mailerService;
         this.defaultGrades = ['6', '7', '8', '9', '10', '11', '12', '13'];
         this.defaultClassTemplates = [
             {
@@ -96,7 +98,28 @@ let AuthService = class AuthService {
             await this.ensureAllDefaultGradeClasses();
             await this.ensureDefaultGradeClassesAndEnrollStudent(user);
         }
-        return { message: 'User registered successfully', userId: user.id };
+        // Generate verification code and save to user
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        user.emailVerificationCode = verificationCode;
+        user.emailVerified = false;
+        await this.userRepository.save(user);
+        // Try to send verification email; if sending fails, return code in response for testing
+        let mailSent = false;
+        try {
+            await this.mailerService.sendMail({
+                to: user.email,
+                subject: 'Welcome to Tuition Sir - Verify your email',
+                text: `Hello ${user.name},\n\nYour verification code is: ${verificationCode}`,
+            });
+            mailSent = true;
+        }
+        catch (e) {
+            console.warn('Failed to send verification email:', e);
+        }
+        const response = { message: 'User registered successfully', userId: user.id };
+        if (!mailSent)
+            response.verificationCode = verificationCode;
+        return response;
     }
     normalizeGrade(value) {
         const raw = String(value || '').trim();
@@ -191,6 +214,7 @@ exports.AuthService = AuthService = __decorate([
     __param(1, (0, typeorm_1.InjectRepository)(class_entity_1.Class)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
         typeorm_2.Repository,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        mailer_1.MailerService])
 ], AuthService);
 //# sourceMappingURL=auth.service.js.map
