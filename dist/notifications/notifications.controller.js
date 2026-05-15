@@ -29,6 +29,9 @@ let NotificationsController = class NotificationsController {
     async getUnread(req) {
         return this.notificationsService.findUnreadByUser(req.user.id);
     }
+    async markAllAsRead(req) {
+        return this.notificationsService.markAllAsReadForUser(req.user.id);
+    }
     async findByUser(userId) {
         return this.notificationsService.findByUser(userId);
     }
@@ -61,6 +64,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], NotificationsController.prototype, "getUnread", null);
+__decorate([
+    (0, common_1.Patch)('mark-read'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsController.prototype, "markAllAsRead", null);
 __decorate([
     (0, common_1.Get)('user/:userId'),
     __param(0, (0, common_1.Param)('userId')),

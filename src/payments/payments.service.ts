@@ -31,6 +31,17 @@ export class PaymentsService {
     });
   }
 
+  async findPendingReceipts() {
+    const pending = await this.paymentRepository.find({
+      where: { approvalStatus: 'pending' },
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      payments: pending.filter((payment) => Boolean(payment.receiptUrl)),
+    };
+  }
+
   async findById(id: string) {
     const payment = await this.paymentRepository.findOne({ where: { id } });
     if (!payment) {

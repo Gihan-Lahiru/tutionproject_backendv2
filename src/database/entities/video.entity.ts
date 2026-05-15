@@ -29,6 +29,9 @@ export class Video {
   @Column('text', { nullable: true })
   description?: string;
 
+  @Column('text', { nullable: true })
+  teacherId?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

@@ -1,4 +1,5 @@
 import { StatsService } from './stats.service';
+import { Request } from 'express';
 export declare class StatsController {
     private statsService;
     constructor(statsService: StatsService);
@@ -19,6 +20,43 @@ export declare class StatsController {
         totalStudents: number;
         totalAssignments: number;
         averageGrade: number;
+    }>;
+    getTeacherStats(req: Request): Promise<{
+        totalClasses: number;
+        totalStudents: number;
+        totalVideos: number;
+        monthlyRevenue: number;
+        trends: {
+            students: string;
+            classes: string;
+            revenue: string;
+        };
+    }>;
+    getTeacherActivity(req: Request): Promise<{
+        activities: any[];
+    }>;
+    getTodayClasses(req: Request): Promise<{
+        classes: {
+            id: string;
+            title: string;
+            name: string;
+            subject: string;
+            grade: string;
+            time: string;
+            day: string;
+            student_count: number;
+            fee: number;
+            description: string;
+        }[];
+    }>;
+    getStudentStats(req: Request): Promise<{
+        totalVideos: number;
+        totalPapers: number;
+        totalNotes: number;
+        totalAssignments: number;
+    }>;
+    getStudentActivity(req: Request): Promise<{
+        activities: any[];
     }>;
 }
 //# sourceMappingURL=stats.controller.d.ts.map

@@ -17,10 +17,12 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const class_entity_1 = require("../database/entities/class.entity");
+const user_entity_1 = require("../database/entities/user.entity");
 const uuid_1 = require("uuid");
 let ClassesService = class ClassesService {
-    constructor(classRepository) {
+    constructor(classRepository, userRepository) {
         this.classRepository = classRepository;
+        this.userRepository = userRepository;
     }
     async create(createClassDto, userId) {
         const newClass = this.classRepository.create({
@@ -67,7 +69,20 @@ let ClassesService = class ClassesService {
     }
     async enrollStudent(classId, studentId) {
         const classEntity = await this.findById(classId);
-        // Add enrollment logic here
+        const student = await this.userRepository.findOne({ where: { id: studentId } });
+        if (!student) {
+            throw new common_1.NotFoundException('Student not found');
+        }
+        if (!classEntity.students) {
+            classEntity.students = [];
+        }
+        // Check if already enrolled
+        const alreadyEnrolled = classEntity.students.some((s) => s.id === studentId);
+        if (alreadyEnrolled) {
+            return { message: 'Student already enrolled in this class' };
+        }
+        classEntity.students.push(student);
+        await this.classRepository.save(classEntity);
         return { message: 'Student enrolled successfully' };
     }
 };
@@ -75,6 +90,8 @@ exports.ClassesService = ClassesService;
 exports.ClassesService = ClassesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(class_entity_1.Class)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], ClassesService);
 //# sourceMappingURL=classes.service.js.map

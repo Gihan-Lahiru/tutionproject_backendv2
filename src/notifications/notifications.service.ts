@@ -33,6 +33,18 @@ export class NotificationsService {
     });
   }
 
+  async markAllAsReadForUser(userId: string) {
+    const unreadNotifications = await this.notificationRepository.find({
+      where: { userId, read: 0 },
+    });
+
+    for (const notification of unreadNotifications) {
+      notification.read = 1;
+    }
+
+    return this.notificationRepository.save(unreadNotifications);
+  }
+
   async markAsRead(id: string) {
     const notification = await this.notificationRepository.findOne({
       where: { id },

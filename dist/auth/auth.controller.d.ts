@@ -16,6 +16,8 @@ export declare class AuthController {
             email: string;
             name: string;
             role: string;
+            grade: string;
+            institute: string;
         };
     }>;
     getCurrentUser(req: Request): Promise<Express.User>;

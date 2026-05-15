@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Put,
   Delete,
   Param,
@@ -31,6 +32,11 @@ export class NotificationsController {
   @Get('unread')
   async getUnread(@Req() req: Request) {
     return this.notificationsService.findUnreadByUser((req.user as any).id);
+  }
+
+  @Patch('mark-read')
+  async markAllAsRead(@Req() req: Request) {
+    return this.notificationsService.markAllAsReadForUser((req.user as any).id);
   }
 
   @Get('user/:userId')

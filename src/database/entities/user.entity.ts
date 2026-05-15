@@ -32,6 +32,15 @@ export class User {
   @Column('text', { nullable: true })
   tuitionClass?: string;
 
+  @Column('text', { nullable: true })
+  grade?: string;
+
+  @Column('text', { nullable: true })
+  phone?: string;
+
+  @Column('text', { nullable: true })
+  institute?: string;
+
   @Column('text', { default: 'active' })
   status: string; // active, inactive, suspended
 

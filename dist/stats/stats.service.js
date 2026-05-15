@@ -5,10 +5,32 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StatsService = void 0;
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
+const class_entity_1 = require("../database/entities/class.entity");
+const payment_entity_1 = require("../database/entities/payment.entity");
+const video_entity_1 = require("../database/entities/video.entity");
+const paper_entity_1 = require("../database/entities/paper.entity");
+const user_entity_1 = require("../database/entities/user.entity");
+const announcement_entity_1 = require("../database/entities/announcement.entity");
 let StatsService = class StatsService {
+    constructor(classRepository, paymentRepository, videoRepository, paperRepository, userRepository, announcementRepository) {
+        this.classRepository = classRepository;
+        this.paymentRepository = paymentRepository;
+        this.videoRepository = videoRepository;
+        this.paperRepository = paperRepository;
+        this.userRepository = userRepository;
+        this.announcementRepository = announcementRepository;
+    }
     async getDashboardStats() {
         return {
             totalUsers: 0,
@@ -33,9 +55,307 @@ let StatsService = class StatsService {
             averageGrade: 0,
         };
     }
+    async getTeacherStats(teacherId) {
+        try {
+            // Get total classes for this teacher
+            const totalClasses = await this.classRepository.count({
+                where: { teacherId },
+            });
+            // Get all classes to count unique students
+            const teacherClasses = await this.classRepository.find({
+                where: { teacherId },
+                relations: ['students'],
+            });
+            const studentSet = new Set();
+            teacherClasses.forEach((cls) => {
+                cls.students?.forEach((student) => {
+                    studentSet.add(student.id);
+                });
+            });
+            const totalStudents = studentSet.size;
+            // Get total videos for this teacher
+            const totalVideos = await this.videoRepository.count({
+                where: { teacherId },
+            });
+            // Get monthly revenue (current month, approved payments)
+            const now = new Date();
+            const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+            const monthlyPayments = await this.paymentRepository.find({
+                where: {
+                    status: 'completed',
+                    approvalStatus: 'approved',
+                },
+            });
+            const monthlyRevenue = monthlyPayments
+                .filter((payment) => {
+                const paymentDate = new Date(payment.createdAt);
+                return paymentDate >= currentMonthStart && paymentDate < currentMonthEnd;
+            })
+                .reduce((sum, payment) => sum + Number(payment.amount), 0);
+            return {
+                totalClasses,
+                totalStudents,
+                totalVideos,
+                monthlyRevenue,
+                trends: {
+                    students: totalStudents > 0 ? '+' + totalStudents : '0',
+                    classes: totalClasses > 0 ? '+' + totalClasses : '0',
+                    revenue: monthlyRevenue > 0 ? '+' + monthlyRevenue : '0',
+                },
+            };
+        }
+        catch (error) {
+            console.error('Error getting teacher stats:', error);
+            return {
+                totalClasses: 0,
+                totalStudents: 0,
+                totalVideos: 0,
+                monthlyRevenue: 0,
+                trends: null,
+            };
+        }
+    }
+    async getTeacherActivity(teacherId) {
+        try {
+            const activities = [];
+            // Get recent papers uploaded by this teacher
+            const recentPapers = await this.paperRepository.find({
+                where: { teacherId },
+                order: { createdAt: 'DESC' },
+                take: 5,
+            });
+            recentPapers.forEach((paper) => {
+                activities.push({
+                    id: paper.id,
+                    type: 'paper',
+                    title: `Uploaded ${paper.type}: ${paper.title}`,
+                    timestamp: paper.createdAt,
+                    created_at: paper.createdAt,
+                    class_id: paper.classId,
+                });
+            });
+            // Get recent announcements created by this teacher
+            const recentAnnouncements = await this.announcementRepository.find({
+                where: { createdById: teacherId },
+                order: { createdAt: 'DESC' },
+                take: 5,
+            });
+            recentAnnouncements.forEach((announcement) => {
+                activities.push({
+                    id: announcement.id,
+                    type: 'announcement',
+                    title: 'Posted an announcement',
+                    description: announcement.message,
+                    timestamp: announcement.createdAt,
+                    created_at: announcement.createdAt,
+                    class_id: announcement.classId,
+                });
+            });
+            // Get recent videos uploaded by this teacher
+            const recentVideos = await this.videoRepository.find({
+                where: { teacherId },
+                order: { createdAt: 'DESC' },
+                take: 5,
+            });
+            recentVideos.forEach((video) => {
+                activities.push({
+                    id: video.id,
+                    type: 'video',
+                    title: `Uploaded video: ${video.title}`,
+                    timestamp: video.createdAt,
+                    created_at: video.createdAt,
+                });
+            });
+            // Get recent approved payments for this teacher's classes
+            const classIds = (await this.classRepository.find({
+                where: { teacherId },
+                select: ['id'],
+            })).map((c) => c.id);
+            if (classIds.length > 0) {
+                const recentPayments = await this.paymentRepository.find({
+                    where: { classId: classIds[0] }, // Using first class for now, could filter by multiple
+                });
+                recentPayments.slice(0, 5).forEach((payment) => {
+                    if (payment.approvalStatus === 'approved') {
+                        activities.push({
+                            id: payment.id,
+                            type: 'fee',
+                            title: `Payment received: Rs ${Number(payment.amount).toLocaleString()}`,
+                            timestamp: payment.createdAt,
+                            created_at: payment.createdAt,
+                        });
+                    }
+                });
+            }
+            // Sort by timestamp descending and take latest 10
+            activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            return {
+                activities: activities.slice(0, 10),
+            };
+        }
+        catch (error) {
+            console.error('Error getting teacher activity:', error);
+            return {
+                activities: [],
+            };
+        }
+    }
+    async getTodayClasses(teacherId) {
+        try {
+            const classes = await this.classRepository.find({
+                where: { teacherId },
+                relations: ['students'],
+            });
+            const classesWithStudentCount = classes.map((cls) => ({
+                id: cls.id,
+                title: cls.title || cls.name,
+                name: cls.name,
+                subject: cls.subject,
+                grade: cls.grade,
+                time: cls.time,
+                day: cls.day,
+                student_count: cls.students?.length || 0,
+                fee: cls.fee,
+                description: cls.description,
+            }));
+            return {
+                classes: classesWithStudentCount,
+            };
+        }
+        catch (error) {
+            console.error('Error getting today classes:', error);
+            return {
+                classes: [],
+            };
+        }
+    }
+    async getStudentStats(studentId) {
+        try {
+            const student = await this.userRepository.findOne({ where: { id: studentId } });
+            if (!student) {
+                return {
+                    totalVideos: 0,
+                    totalPapers: 0,
+                    totalNotes: 0,
+                    totalAssignments: 0,
+                };
+            }
+            const studentGrade = student.grade;
+            // Count videos available to this student's grade
+            const videoCount = await this.videoRepository.count({
+                where: { grade: studentGrade },
+            });
+            // Count papers available to this student's grade
+            const paperCount = await this.paperRepository.count({
+                where: { grade: studentGrade, type: 'Paper' },
+            });
+            // Count notes available to this student's grade
+            const noteCount = await this.paperRepository.count({
+                where: { grade: studentGrade, type: 'Note' },
+            });
+            // Count assignments available to this student's grade
+            const assignmentCount = await this.paperRepository.count({
+                where: { grade: studentGrade, type: 'Assignment' },
+            });
+            return {
+                totalVideos: videoCount,
+                totalPapers: paperCount,
+                totalNotes: noteCount,
+                totalAssignments: assignmentCount,
+            };
+        }
+        catch (error) {
+            console.error('Error getting student stats:', error);
+            return {
+                totalVideos: 0,
+                totalPapers: 0,
+                totalNotes: 0,
+                totalAssignments: 0,
+            };
+        }
+    }
+    async getStudentActivity(studentId) {
+        try {
+            const student = await this.userRepository.findOne({ where: { id: studentId } });
+            if (!student) {
+                return { activities: [] };
+            }
+            const activities = [];
+            const studentGrade = student.grade;
+            // Get recent videos available to student
+            const recentVideos = await this.videoRepository.find({
+                where: { grade: studentGrade },
+                order: { createdAt: 'DESC' },
+                take: 3,
+            });
+            recentVideos.forEach((video) => {
+                activities.push({
+                    id: video.id,
+                    type: 'video',
+                    title: `Available: ${video.title}`,
+                    timestamp: video.createdAt,
+                    status: 'available',
+                });
+            });
+            // Get recent papers
+            const recentPapers = await this.paperRepository.find({
+                where: { grade: studentGrade, type: 'Paper' },
+                order: { createdAt: 'DESC' },
+                take: 3,
+            });
+            recentPapers.forEach((paper) => {
+                activities.push({
+                    id: paper.id,
+                    type: 'paper',
+                    title: `Available: ${paper.title}`,
+                    timestamp: paper.createdAt,
+                    status: 'available',
+                });
+            });
+            // Get recent notes
+            const recentNotes = await this.paperRepository.find({
+                where: { grade: studentGrade, type: 'Note' },
+                order: { createdAt: 'DESC' },
+                take: 2,
+            });
+            recentNotes.forEach((note) => {
+                activities.push({
+                    id: note.id,
+                    type: 'notes',
+                    title: `Available: ${note.title}`,
+                    timestamp: note.createdAt,
+                    status: 'available',
+                });
+            });
+            // Sort by timestamp descending
+            activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            return {
+                activities: activities.slice(0, 8),
+            };
+        }
+        catch (error) {
+            console.error('Error getting student activity:', error);
+            return {
+                activities: [],
+            };
+        }
+    }
 };
 exports.StatsService = StatsService;
 exports.StatsService = StatsService = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(class_entity_1.Class)),
+    __param(1, (0, typeorm_1.InjectRepository)(payment_entity_1.Payment)),
+    __param(2, (0, typeorm_1.InjectRepository)(video_entity_1.Video)),
+    __param(3, (0, typeorm_1.InjectRepository)(paper_entity_1.Paper)),
+    __param(4, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __param(5, (0, typeorm_1.InjectRepository)(announcement_entity_1.Announcement)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository])
 ], StatsService);
 //# sourceMappingURL=stats.service.js.map

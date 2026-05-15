@@ -16,11 +16,23 @@ export class Paper {
   @Column('text')
   grade: string;
 
+  @Column('text', { default: 'Paper' })
+  type: string;
+
+  @Column('text', { nullable: true })
+  topic?: string;
+
+  @Column('text', { nullable: true })
+  classId?: string;
+
   @Column('text')
   fileUrl: string;
 
   @Column('text', { nullable: true })
   filePublicId?: string;
+
+  @Column('text', { nullable: true })
+  teacherId?: string;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -8,6 +8,9 @@ export declare class User {
     role: string;
     profilePicture?: string;
     tuitionClass?: string;
+    grade?: string;
+    phone?: string;
+    institute?: string;
     status: string;
     currentSessionId?: string;
     createdAt: Date;

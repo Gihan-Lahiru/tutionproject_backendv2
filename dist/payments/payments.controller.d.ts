@@ -5,6 +5,9 @@ export declare class PaymentsController {
     create(createPaymentDto: any): Promise<import("../database/entities/payment.entity").Payment[]>;
     findByUser(userId: string): Promise<import("../database/entities/payment.entity").Payment[]>;
     getMyPayments(req: any): Promise<import("../database/entities/payment.entity").Payment[]>;
+    getPendingReceipts(): Promise<{
+        payments: import("../database/entities/payment.entity").Payment[];
+    }>;
     findAll(): Promise<import("../database/entities/payment.entity").Payment[]>;
     findById(id: string): Promise<import("../database/entities/payment.entity").Payment>;
     update(id: string, updatePaymentDto: any): Promise<import("../database/entities/payment.entity").Payment>;

@@ -12,6 +12,7 @@ const config_1 = require("@nestjs/config");
 const typeorm_1 = require("@nestjs/typeorm");
 const auth_module_1 = require("./auth/auth.module");
 const classes_module_1 = require("./classes/classes.module");
+const announcements_module_1 = require("./classes/announcements.module");
 const assignments_module_1 = require("./assignments/assignments.module");
 const notes_module_1 = require("./notes/notes.module");
 const videos_module_1 = require("./videos/videos.module");
@@ -34,6 +35,7 @@ exports.AppModule = AppModule = __decorate([
             }),
             typeorm_1.TypeOrmModule.forRoot(database_config_1.typeOrmConfig),
             auth_module_1.AuthModule,
+            announcements_module_1.AnnouncementsModule,
             classes_module_1.ClassesModule,
             assignments_module_1.AssignmentsModule,
             notes_module_1.NotesModule,

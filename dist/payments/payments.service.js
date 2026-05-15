@@ -40,6 +40,15 @@ let PaymentsService = class PaymentsService {
             order: { createdAt: 'DESC' },
         });
     }
+    async findPendingReceipts() {
+        const pending = await this.paymentRepository.find({
+            where: { approvalStatus: 'pending' },
+            order: { createdAt: 'DESC' },
+        });
+        return {
+            payments: pending.filter((payment) => Boolean(payment.receiptUrl)),
+        };
+    }
     async findById(id) {
         const payment = await this.paymentRepository.findOne({ where: { id } });
         if (!payment) {

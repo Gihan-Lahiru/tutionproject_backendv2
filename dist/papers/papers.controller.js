@@ -21,17 +21,55 @@ let PapersController = class PapersController {
     constructor(papersService) {
         this.papersService = papersService;
     }
-    async upload(file, uploadDto) {
-        return this.papersService.upload(file, uploadDto.title, uploadDto.grade);
+    async upload(file, uploadDto, req) {
+        try {
+            if (!file) {
+                throw new common_1.BadRequestException('No file was uploaded');
+            }
+            if (!uploadDto?.title?.trim()) {
+                throw new common_1.BadRequestException('Title is required');
+            }
+            if (!uploadDto?.grade?.trim()) {
+                throw new common_1.BadRequestException('Grade is required');
+            }
+            const uploader = req.user;
+            return await this.papersService.upload(file, uploadDto.title, uploadDto.grade, uploadDto.type, uploadDto.topic, uploadDto.class_id, uploader?.name || uploader?.email, uploader?.id);
+        }
+        catch (error) {
+            if (error instanceof common_1.BadRequestException) {
+                throw error;
+            }
+            throw new common_1.BadRequestException(error?.message || 'Failed to upload paper');
+        }
     }
-    async findAll() {
-        return this.papersService.findAll();
+    async findAll(type) {
+        return this.papersService.findAll(type);
     }
     async findByGrade(grade) {
         return this.papersService.findByGrade(grade);
     }
     async findById(id) {
         return this.papersService.findById(id);
+    }
+    async getFile(id, res) {
+        const target = await this.papersService.resolveFileTarget(id);
+        if (target.type === 'remote') {
+            return res.redirect(target.url);
+        }
+        return res.download(target.path, target.filename);
+    }
+    async download(id, req, res) {
+        const requester = req.user;
+        const target = await this.papersService.resolveDownloadTarget(id, requester);
+        if (target.type === 'remote') {
+            return res.redirect(target.url);
+        }
+        if (target.type === 'buffer') {
+            res.setHeader('Content-Type', target.contentType);
+            res.setHeader('Content-Disposition', `attachment; filename="${target.filename}"`);
+            return res.send(Buffer.from(target.buffer));
+        }
+        return res.download(target.path, target.filename);
     }
     async delete(id) {
         return this.papersService.delete(id);
@@ -43,14 +81,16 @@ __decorate([
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
     __param(0, (0, common_1.UploadedFile)()),
     __param(1, (0, common_1.Body)()),
+    __param(2, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, Object, Object]),
     __metadata("design:returntype", Promise)
 ], PapersController.prototype, "upload", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('type')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PapersController.prototype, "findAll", null);
 __decorate([
@@ -67,6 +107,23 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PapersController.prototype, "findById", null);
+__decorate([
+    (0, common_1.Get)(':id/file'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], PapersController.prototype, "getFile", null);
+__decorate([
+    (0, common_1.Get)(':id/download'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PapersController.prototype, "download", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Class } from '../database/entities/class.entity';
+import { User } from '../database/entities/user.entity';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
 import { v4 as uuid } from 'uuid';
@@ -10,6 +11,7 @@ import { v4 as uuid } from 'uuid';
 export class ClassesService {
   constructor(
     @InjectRepository(Class) private classRepository: Repository<Class>,
+    @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
   async create(createClassDto: CreateClassDto, userId: string) {
@@ -69,7 +71,25 @@ export class ClassesService {
 
   async enrollStudent(classId: string, studentId: string) {
     const classEntity = await this.findById(classId);
-    // Add enrollment logic here
+    const student = await this.userRepository.findOne({ where: { id: studentId } });
+    
+    if (!student) {
+      throw new NotFoundException('Student not found');
+    }
+
+    if (!classEntity.students) {
+      classEntity.students = [];
+    }
+
+    // Check if already enrolled
+    const alreadyEnrolled = classEntity.students.some((s) => s.id === studentId);
+    if (alreadyEnrolled) {
+      return { message: 'Student already enrolled in this class' };
+    }
+
+    classEntity.students.push(student);
+    await this.classRepository.save(classEntity);
+    
     return { message: 'Student enrolled successfully' };
   }
 }

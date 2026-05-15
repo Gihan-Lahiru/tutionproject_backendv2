@@ -6,6 +6,9 @@ export declare class PaymentsService {
     create(createPaymentDto: any): Promise<Payment[]>;
     findByUser(userId: string): Promise<Payment[]>;
     findAll(): Promise<Payment[]>;
+    findPendingReceipts(): Promise<{
+        payments: Payment[];
+    }>;
     findById(id: string): Promise<Payment>;
     update(id: string, updatePaymentDto: any): Promise<Payment>;
     updateStatus(id: string, status: string): Promise<Payment>;

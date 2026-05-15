@@ -14,4 +14,12 @@ export class RegisterDto {
   @IsOptional()
   @IsIn(['student', 'teacher', 'admin'])
   role?: string;
+
+  @IsOptional()
+  @IsString()
+  grade?: string;
+
+  @IsOptional()
+  @IsString()
+  institute?: string;
 }

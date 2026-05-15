@@ -32,4 +32,14 @@ __decorate([
     (0, class_validator_1.IsIn)(['student', 'teacher', 'admin']),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "role", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "grade", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "institute", void 0);
 //# sourceMappingURL=register.dto.js.map

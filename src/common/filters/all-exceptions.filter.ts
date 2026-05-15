@@ -15,6 +15,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
 
@@ -27,9 +28,28 @@ export class AllExceptionsFilter implements ExceptionFilter {
           : exception.message;
     } else if (exception instanceof Error) {
       message = exception.message;
+    } else if (exception && typeof exception === 'object' && 'message' in exception) {
+      message = String((exception as any).message || message);
+    } else if (exception && typeof exception === 'object') {
+      try {
+        message = JSON.stringify(exception);
+      } catch (e) {
+        message = String(exception);
+      }
+    } else if (typeof exception === 'string') {
+      message = exception;
     }
 
     this.logger.error(`[${new Date().toISOString()}] ${message}`, exception);
+    // Log request info for debugging unauthorized errors
+    try {
+      const req = request as any;
+      if (req) {
+        this.logger.error(`[Request] ${req.method} ${req.url} Authorization: ${req.headers?.authorization}`);
+      }
+    } catch (e) {
+      // ignore
+    }
 
     response.status(status).json({
       statusCode: status,

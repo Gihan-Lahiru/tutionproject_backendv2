@@ -29,6 +29,9 @@ let PaymentsController = class PaymentsController {
     async getMyPayments(req) {
         return this.paymentsService.findByUser(req.user.id);
     }
+    async getPendingReceipts() {
+        return this.paymentsService.findPendingReceipts();
+    }
     async findAll() {
         return this.paymentsService.findAll();
     }
@@ -64,6 +67,12 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], PaymentsController.prototype, "getMyPayments", null);
+__decorate([
+    (0, common_1.Get)('receipts/pending'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], PaymentsController.prototype, "getPendingReceipts", null);
 __decorate([
     (0, common_1.Get)(),
     __metadata("design:type", Function),

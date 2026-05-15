@@ -6,6 +6,7 @@ export declare class NotificationsService {
     create(createNotificationDto: any): Promise<Notification[]>;
     findByUser(userId: string): Promise<Notification[]>;
     findUnreadByUser(userId: string): Promise<Notification[]>;
+    markAllAsReadForUser(userId: string): Promise<Notification[]>;
     markAsRead(id: string): Promise<Notification>;
     delete(id: string): Promise<{
         message: string;

@@ -39,6 +39,7 @@
     "mysql2": "latest",
     "passport": "latest",
     "passport-jwt": "latest",
+    "pdf-lib": "^1.17.1",
     "reflect-metadata": "latest",
     "rimraf": "latest",
     "rxjs": "latest",

@@ -4,19 +4,38 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../database/entities/user.entity';
+import { Class } from '../database/entities/class.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class AuthService {
+  private readonly defaultGrades = ['6', '7', '8', '9', '10', '11', '12', '13'];
+
+  private readonly defaultClassTemplates = [
+    {
+      subject: 'Science',
+      day: 'Tuesday',
+      time: '4.00pm-7.00pm',
+      location: 'Prebhashi Hettipola',
+    },
+    {
+      subject: 'Science',
+      day: 'Thursday',
+      time: '4.00pm-7.00pm',
+      location: 'Focus Hadungamuwa',
+    },
+  ];
+
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    @InjectRepository(Class) private classRepository: Repository<Class>,
     private jwtService: JwtService,
   ) {}
 
   async register(registerDto: RegisterDto) {
-    const { email, password, name, role } = registerDto;
+    const { email, password, name, role, grade, institute } = registerDto;
 
     const existingUser = await this.userRepository.findOne({ where: { email } });
     if (existingUser) {
@@ -31,10 +50,99 @@ export class AuthService {
       password: hashedPassword,
       name,
       role: role || 'student',
+      grade,
+      institute,
     });
 
     await this.userRepository.save(user);
+
+    if ((user.role || 'student') === 'student' && user.grade) {
+      await this.ensureAllDefaultGradeClasses();
+      await this.ensureDefaultGradeClassesAndEnrollStudent(user);
+    }
+
     return { message: 'User registered successfully', userId: user.id };
+  }
+
+  private normalizeGrade(value?: string) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    return raw.replace(/^grade\s*/i, '').trim();
+  }
+
+  private async ensureDefaultGradeClassesAndEnrollStudent(student: User) {
+    const normalizedGrade = this.normalizeGrade(student.grade);
+    if (!normalizedGrade) return;
+
+    for (const template of this.defaultClassTemplates) {
+      let classEntity = await this.findClassByNormalizedGradeTemplate(
+        normalizedGrade,
+        template.subject,
+        template.location,
+      );
+
+      if (!classEntity) {
+        classEntity = await this.createDefaultClass(normalizedGrade, template);
+      }
+
+      classEntity.students = classEntity.students || [];
+      const alreadyEnrolled = classEntity.students.some((s) => s.id === student.id);
+      if (!alreadyEnrolled) {
+        classEntity.students.push(student);
+        await this.classRepository.save(classEntity);
+      }
+    }
+  }
+
+  private async ensureAllDefaultGradeClasses() {
+    for (const grade of this.defaultGrades) {
+      for (const template of this.defaultClassTemplates) {
+        const existing = await this.findClassByNormalizedGradeTemplate(
+          grade,
+          template.subject,
+          template.location,
+        );
+
+        if (!existing) {
+          await this.createDefaultClass(grade, template);
+        }
+      }
+    }
+  }
+
+  private async findClassByNormalizedGradeTemplate(
+    normalizedGrade: string,
+    subject: string,
+    location: string,
+  ) {
+    const candidates = await this.classRepository.find({
+      where: { subject, location },
+      relations: ['students'],
+    });
+
+    return (
+      candidates.find((entry) => this.normalizeGrade(entry.grade) === normalizedGrade) || null
+    );
+  }
+
+  private async createDefaultClass(
+    normalizedGrade: string,
+    template: { subject: string; day: string; time: string; location: string },
+  ) {
+    const newClass = this.classRepository.create({
+      id: uuid(),
+      name: `${template.subject} - Grade ${normalizedGrade}`,
+      title: `${template.subject} Grade ${normalizedGrade}`,
+      grade: normalizedGrade,
+      subject: template.subject,
+      day: template.day,
+      time: template.time,
+      description: `${template.subject} Grade ${normalizedGrade}`,
+      location: template.location,
+    });
+
+    const saved = await this.classRepository.save(newClass);
+    return { ...saved, students: [] as User[] };
   }
 
   async login(loginDto: LoginDto) {
@@ -63,6 +171,8 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role,
+        grade: user.grade,
+        institute: user.institute,
       },
     };
   }

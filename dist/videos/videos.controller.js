@@ -20,8 +20,12 @@ let VideosController = class VideosController {
     constructor(videosService) {
         this.videosService = videosService;
     }
-    async create(createVideoDto) {
-        return this.videosService.create(createVideoDto);
+    async create(createVideoDto, req) {
+        const user = req.user;
+        return this.videosService.create({
+            ...createVideoDto,
+            teacherId: user?.id,
+        });
     }
     async findAll() {
         return this.videosService.findAll();
@@ -43,8 +47,9 @@ exports.VideosController = VideosController;
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], VideosController.prototype, "create", null);
 __decorate([

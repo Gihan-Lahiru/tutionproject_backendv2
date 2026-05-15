@@ -6,6 +6,7 @@ export declare class UsersService {
     findAll(): Promise<User[]>;
     findById(id: string): Promise<User>;
     findByEmail(email: string): Promise<User>;
+    create(userData: any): Promise<User[]>;
     update(id: string, updateUserDto: any): Promise<User>;
     findByRole(role: string): Promise<User[]>;
     delete(id: string): Promise<{

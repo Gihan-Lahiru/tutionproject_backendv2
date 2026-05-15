@@ -41,6 +41,15 @@ let NotificationsService = class NotificationsService {
             order: { createdAt: 'DESC' },
         });
     }
+    async markAllAsReadForUser(userId) {
+        const unreadNotifications = await this.notificationRepository.find({
+            where: { userId, read: 0 },
+        });
+        for (const notification of unreadNotifications) {
+            notification.read = 1;
+        }
+        return this.notificationRepository.save(unreadNotifications);
+    }
     async markAsRead(id) {
         const notification = await this.notificationRepository.findOne({
             where: { id },

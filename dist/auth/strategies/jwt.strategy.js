@@ -13,27 +13,37 @@ exports.JwtStrategy = void 0;
 const common_1 = require("@nestjs/common");
 const passport_1 = require("@nestjs/passport");
 const passport_jwt_1 = require("passport-jwt");
+const config_1 = require("@nestjs/config");
 const auth_service_1 = require("../auth.service");
 let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy) {
-    constructor(authService) {
+    constructor(authService, configService) {
         super({
             jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: process.env.JWT_SECRET || 'your-secret-key',
+            secretOrKey: configService.get('JWT_SECRET') || 'your-secret-key',
         });
         this.authService = authService;
+        this.configService = configService;
     }
     async validate(payload) {
-        // temporary debug log to inspect payload during development
-        // remove this log after debugging is complete
-        // eslint-disable-next-line no-console
-        console.log('[JwtStrategy] payload:', payload);
-        return { id: payload.id, email: payload.email, role: payload.role };
+        const user = await this.authService.validateUser(payload.id);
+        if (!user) {
+            return { id: payload.id, email: payload.email, role: payload.role };
+        }
+        return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            grade: user.grade,
+            institute: user.institute,
+        };
     }
 };
 exports.JwtStrategy = JwtStrategy;
 exports.JwtStrategy = JwtStrategy = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
+    __metadata("design:paramtypes", [auth_service_1.AuthService,
+        config_1.ConfigService])
 ], JwtStrategy);
 //# sourceMappingURL=jwt.strategy.js.map

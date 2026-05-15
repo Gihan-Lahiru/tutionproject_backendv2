@@ -31,6 +31,11 @@ export class PaymentsController {
     return this.paymentsService.findByUser(req.user.id);
   }
 
+  @Get('receipts/pending')
+  async getPendingReceipts() {
+    return this.paymentsService.findPendingReceipts();
+  }
+
   @Get()
   async findAll() {
     return this.paymentsService.findAll();

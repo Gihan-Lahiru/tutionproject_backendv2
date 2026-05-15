@@ -29,6 +29,26 @@ let StatsController = class StatsController {
     async getClassStats(classId) {
         return this.statsService.getClassStats(classId);
     }
+    async getTeacherStats(req) {
+        const user = req.user;
+        return this.statsService.getTeacherStats(user?.id);
+    }
+    async getTeacherActivity(req) {
+        const user = req.user;
+        return this.statsService.getTeacherActivity(user?.id);
+    }
+    async getTodayClasses(req) {
+        const user = req.user;
+        return this.statsService.getTodayClasses(user?.id);
+    }
+    async getStudentStats(req) {
+        const user = req.user;
+        return this.statsService.getStudentStats(user?.id);
+    }
+    async getStudentActivity(req) {
+        const user = req.user;
+        return this.statsService.getStudentActivity(user?.id);
+    }
 };
 exports.StatsController = StatsController;
 __decorate([
@@ -51,6 +71,41 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], StatsController.prototype, "getClassStats", null);
+__decorate([
+    (0, common_1.Get)('teacher-stats'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], StatsController.prototype, "getTeacherStats", null);
+__decorate([
+    (0, common_1.Get)('teacher-activity'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], StatsController.prototype, "getTeacherActivity", null);
+__decorate([
+    (0, common_1.Get)('today-classes'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], StatsController.prototype, "getTodayClasses", null);
+__decorate([
+    (0, common_1.Get)('student-stats'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], StatsController.prototype, "getStudentStats", null);
+__decorate([
+    (0, common_1.Get)('student-activity'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], StatsController.prototype, "getStudentActivity", null);
 exports.StatsController = StatsController = __decorate([
     (0, common_1.Controller)('api/stats'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),

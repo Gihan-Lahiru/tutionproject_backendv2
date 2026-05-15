@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { ClassesModule } from './classes/classes.module';
+import { AnnouncementsModule } from './classes/announcements.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { NotesModule } from './notes/notes.module';
 import { VideosModule } from './videos/videos.module';
@@ -22,6 +23,7 @@ import { typeOrmConfig } from './config/database.config';
     }),
     TypeOrmModule.forRoot(typeOrmConfig),
     AuthModule,
+    AnnouncementsModule,
     ClassesModule,
     AssignmentsModule,
     NotesModule,

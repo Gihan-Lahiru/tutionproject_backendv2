@@ -8,6 +8,7 @@ import { Video } from '../database/entities/video.entity';
 import { Payment } from '../database/entities/payment.entity';
 import { Paper } from '../database/entities/paper.entity';
 import { Notification } from '../database/entities/notification.entity';
+import { Announcement } from '../database/entities/announcement.entity';
 
 const entities = [
   User,
@@ -19,6 +20,7 @@ const entities = [
   Payment,
   Paper,
   Notification,
+  Announcement,
 ];
 
 export const typeOrmConfig: TypeOrmModuleOptions =
