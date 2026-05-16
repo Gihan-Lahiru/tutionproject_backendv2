@@ -13,7 +13,13 @@ export declare class AuthService {
     private readonly defaultGrades;
     private readonly defaultClassTemplates;
     constructor(userRepository: Repository<User>, classRepository: Repository<Class>, jwtService: JwtService, mailerService: MailerService);
-    register(registerDto: RegisterDto): Promise<any>;
+    register(registerDto: RegisterDto): Promise<{
+        message: string;
+        userId: string;
+    }>;
+    resendVerificationCode(email: string): Promise<{
+        message: string;
+    }>;
     verifyEmail(email: string, code: string): Promise<{
         message: string;
     }>;
@@ -34,5 +40,6 @@ export declare class AuthService {
         };
     }>;
     validateUser(id: string): Promise<User>;
+    private sendVerificationEmail;
 }
 //# sourceMappingURL=auth.service.d.ts.map

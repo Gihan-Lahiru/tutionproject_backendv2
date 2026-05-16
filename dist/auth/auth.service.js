@@ -95,31 +95,42 @@ let AuthService = class AuthService {
         });
         await this.userRepository.save(user);
         if ((user.role || 'student') === 'student' && user.grade) {
-            await this.ensureAllDefaultGradeClasses();
-            await this.ensureDefaultGradeClassesAndEnrollStudent(user);
+            void this.ensureAllDefaultGradeClasses().catch((error) => {
+                console.warn('Failed to prepare default grade classes:', error);
+            });
+            void this.ensureDefaultGradeClassesAndEnrollStudent(user).catch((error) => {
+                console.warn('Failed to enroll student in default classes:', error);
+            });
         }
         // Generate verification code and save to user
         const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
         user.emailVerificationCode = verificationCode;
         user.emailVerified = false;
         await this.userRepository.save(user);
-        // Try to send verification email; if sending fails, return code in response for testing
-        let mailSent = false;
-        try {
-            await this.mailerService.sendMail({
-                to: user.email,
-                subject: 'Welcome to Tuition Sir - Verify your email',
-                text: `Hello ${user.name},\n\nYour verification code is: ${verificationCode}`,
-            });
-            mailSent = true;
+        void this.sendVerificationEmail(user, verificationCode).catch((error) => {
+            console.warn('Failed to send verification email:', error);
+        });
+        return {
+            message: 'Registration created. Please verify your email to continue.',
+            userId: user.id,
+        };
+    }
+    async resendVerificationCode(email) {
+        const user = await this.userRepository.findOne({ where: { email } });
+        if (!user) {
+            throw new common_1.BadRequestException('User not found');
         }
-        catch (e) {
-            console.warn('Failed to send verification email:', e);
+        if (user.emailVerified) {
+            return { message: 'Email already verified' };
         }
-        const response = { message: 'User registered successfully', userId: user.id };
-        if (!mailSent)
-            response.verificationCode = verificationCode;
-        return response;
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        user.emailVerificationCode = verificationCode;
+        user.emailVerified = false;
+        await this.userRepository.save(user);
+        void this.sendVerificationEmail(user, verificationCode).catch((error) => {
+            console.warn('Failed to send verification email:', error);
+        });
+        return { message: 'Verification code sent. Please verify your email to continue.' };
     }
     async verifyEmail(email, code) {
         const user = await this.userRepository.findOne({ where: { email } });
@@ -224,6 +235,29 @@ let AuthService = class AuthService {
     }
     async validateUser(id) {
         return this.userRepository.findOne({ where: { id } });
+    }
+    async sendVerificationEmail(user, verificationCode) {
+        try {
+            await this.mailerService.sendMail({
+                to: user.email,
+                subject: 'Welcome to Tuition Sir - Verify your email',
+                text: `Hello ${user.name},\n\nYour verification code is: ${verificationCode}`,
+                html: `
+          <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
+            <h2 style="margin: 0 0 12px;">Welcome to Tuition Sir</h2>
+            <p>Hello ${user.name},</p>
+            <p>Your verification code is:</p>
+            <div style="font-size: 28px; font-weight: 700; letter-spacing: 4px; margin: 16px 0;">${verificationCode}</div>
+            <p>If you did not request this, you can ignore this email.</p>
+          </div>
+        `,
+            });
+            return true;
+        }
+        catch (error) {
+            console.warn('Failed to send verification email:', error);
+            return false;
+        }
     }
 };
 exports.AuthService = AuthService;

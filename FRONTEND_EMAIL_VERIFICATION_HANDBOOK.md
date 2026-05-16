@@ -25,8 +25,8 @@ All auth routes are under:
 3. Backend creates the user with `emailVerified = false`.
 4. Backend generates a 6-digit verification code.
 5. Backend attempts to send the code by email.
-6. If email sending fails in development, the register response includes the `verificationCode`.
-7. Frontend shows a verify-code screen.
+6. Frontend shows a verify-code screen after registration.
+7. User manually enters the code received by email.
 8. Frontend sends email + code to `POST /api/auth/verify-email`.
 9. After verification, user can log in normally.
 
@@ -54,23 +54,34 @@ All auth routes are under:
 - `grade` and `institute` are supported.
 - For students, backend auto-seeds 2 class records for the grade.
 - Backend auto-generates a verification code.
+- Frontend must not auto-fill, display, or reuse that code; the user must type the email code manually.
 
 ### Success response
 
 ```json
 {
-  "message": "User registered successfully",
+  "message": "Registration created. Please verify your email to continue.",
   "userId": "uuid-here"
 }
 ```
 
-If SMTP is not available in development, the response may also include:
+### Resend verification code
+
+### `POST /api/auth/resend-verification-code`
+
+### Request body
 
 ```json
 {
-  "message": "User registered successfully",
-  "userId": "uuid-here",
-  "verificationCode": "123456"
+  "email": "newstudent@example.com"
+}
+```
+
+### Success response
+
+```json
+{
+  "message": "Verification code sent. Please verify your email to continue."
 }
 ```
 
@@ -155,9 +166,10 @@ If SMTP is not available in development, the response may also include:
 ### Registration page
 After submitting the register form:
 - Show success message.
-- If response contains `verificationCode`, display it only for development/testing.
-- Otherwise, show a field to enter the code received by email.
+- Show a field to enter the code received by email.
+- Do not prefill the code field from any API response or client-side logic.
 - Submit email + code to `/api/auth/verify-email`.
+- If the user did not receive the email, call `/api/auth/resend-verification-code`.
 
 ### Suggested frontend states
 - `registerForm`
@@ -188,6 +200,12 @@ const res = await api.post('/api/auth/register', {
 });
 ```
 
+### Important
+
+- Do not show a final success state after register.
+- Show only a pending-verification state and wait for the user to enter the code.
+- Mark the account as fully complete only after `POST /api/auth/verify-email` succeeds.
+
 ### Verify email
 
 ```js
@@ -213,7 +231,7 @@ const loginRes = await api.post('/api/auth/login', {
 - Do not send SMTP credentials from the frontend.
 - Frontend only needs the API base URL.
 - The backend handles email sending and verification code logic.
-- For development without real SMTP, the backend may return the verification code in the response.
+- The backend also exposes a resend endpoint for users who did not receive the first email.
 
 ---
 
@@ -234,18 +252,13 @@ These records are auto-enrolled for the student.
 // 1. Register
 const registerResponse = await api.post('/api/auth/register', formData);
 
-// 2. If backend returns verificationCode (dev only), use it.
-if (registerResponse.data.verificationCode) {
-  setDevCode(registerResponse.data.verificationCode);
-}
-
-// 3. Verify email
+// 2. Verify email
 await api.post('/api/auth/verify-email', {
   email: formData.email,
   code: enteredCode,
 });
 
-// 4. Then allow login
+// 3. Then allow login
 ```
 
 ---

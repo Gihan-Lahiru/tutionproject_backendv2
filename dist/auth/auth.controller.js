@@ -18,6 +18,7 @@ const passport_1 = require("@nestjs/passport");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
 const register_dto_1 = require("./dto/register.dto");
+const resend_verification_dto_1 = require("./dto/resend-verification.dto");
 const verify_email_dto_1 = require("./dto/verify-email.dto");
 let AuthController = class AuthController {
     constructor(authService) {
@@ -31,6 +32,9 @@ let AuthController = class AuthController {
     }
     async verifyEmail(verifyEmailDto) {
         return this.authService.verifyEmail(verifyEmailDto.email, verifyEmailDto.code);
+    }
+    async resendVerificationCode(resendVerificationDto) {
+        return this.authService.resendVerificationCode(resendVerificationDto.email);
     }
     async getCurrentUser(req) {
         return req.user;
@@ -58,6 +62,13 @@ __decorate([
     __metadata("design:paramtypes", [verify_email_dto_1.VerifyEmailDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "verifyEmail", null);
+__decorate([
+    (0, common_1.Post)('resend-verification-code'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [resend_verification_dto_1.ResendVerificationDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "resendVerificationCode", null);
 __decorate([
     (0, common_1.Get)('me'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),

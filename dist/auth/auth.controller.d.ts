@@ -2,11 +2,15 @@ import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
-    register(registerDto: RegisterDto): Promise<any>;
+    register(registerDto: RegisterDto): Promise<{
+        message: string;
+        userId: string;
+    }>;
     login(loginDto: LoginDto): Promise<{
         token: string;
         user: {
@@ -19,6 +23,9 @@ export declare class AuthController {
         };
     }>;
     verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<{
+        message: string;
+    }>;
+    resendVerificationCode(resendVerificationDto: ResendVerificationDto): Promise<{
         message: string;
     }>;
     getCurrentUser(req: Request): Promise<Express.User>;
