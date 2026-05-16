@@ -8,7 +8,9 @@ export declare class UsersService {
     findByEmail(email: string): Promise<User>;
     create(userData: any): Promise<User[]>;
     update(id: string, updateUserDto: any): Promise<User>;
-    findByRole(role: string): Promise<User[]>;
+    findByRole(role: string, status?: string): Promise<User[]>;
+    approve(id: string): Promise<User>;
+    reject(id: string, reason?: string): Promise<User>;
     delete(id: string): Promise<{
         message: string;
     }>;

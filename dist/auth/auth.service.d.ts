@@ -15,14 +15,9 @@ export declare class AuthService {
     constructor(userRepository: Repository<User>, classRepository: Repository<Class>, jwtService: JwtService, mailerService: MailerService);
     register(registerDto: RegisterDto): Promise<{
         message: string;
-        userId: string;
     }>;
-    resendVerificationCode(email: string): Promise<{
-        message: string;
-    }>;
-    verifyEmail(email: string, code: string): Promise<{
-        message: string;
-    }>;
+    resendVerificationCode(email: string): Promise<void>;
+    verifyEmail(email: string, code: string): Promise<void>;
     private normalizeGrade;
     private ensureDefaultGradeClassesAndEnrollStudent;
     private ensureAllDefaultGradeClasses;

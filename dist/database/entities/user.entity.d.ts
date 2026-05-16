@@ -13,6 +13,7 @@ export declare class User {
     institute?: string;
     emailVerificationCode?: string;
     emailVerified: boolean;
+    approvalStatus: string;
     status: string;
     currentSessionId?: string;
     createdAt: Date;

@@ -44,8 +44,25 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
-  async findByRole(role: string) {
+  async findByRole(role: string, status?: string) {
+    if (status) {
+      return this.userRepository.find({ where: { role, approvalStatus: status } });
+    }
     return this.userRepository.find({ where: { role } });
+  }
+
+  async approve(id: string) {
+    const user = await this.findById(id);
+    user.approvalStatus = 'approved';
+    user.status = 'active'; // Also mark as active
+    return this.userRepository.save(user);
+  }
+
+  async reject(id: string, reason?: string) {
+    const user = await this.findById(id);
+    user.approvalStatus = 'rejected';
+    user.status = 'inactive'; // Mark as inactive when rejected
+    return this.userRepository.save(user);
   }
 
   async delete(id: string) {

@@ -33,19 +33,22 @@ export class AuthService {
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Class) private classRepository: Repository<Class>,
     private jwtService: JwtService,
-      private mailerService: MailerService,
-    ) {}
+    private mailerService: MailerService,
+  ) {}
 
   async register(registerDto: RegisterDto) {
     const { email, password, name, role, grade, institute } = registerDto;
 
+    // Check if user already exists
     const existingUser = await this.userRepository.findOne({ where: { email } });
     if (existingUser) {
-      throw new BadRequestException('User already exists');
+      throw new BadRequestException('User with this email already exists');
     }
 
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Create user with pending approval status
     const user = this.userRepository.create({
       id: uuid(),
       email,
@@ -54,10 +57,14 @@ export class AuthService {
       role: role || 'student',
       grade,
       institute,
+      emailVerified: true, // Email is verified (we trust registration)
+      approvalStatus: 'pending', // But approval is pending from teacher/admin
+      status: 'active',
     });
 
     await this.userRepository.save(user);
 
+    // Enroll student in default classes if needed (background task)
     if ((user.role || 'student') === 'student' && user.grade) {
       void this.ensureAllDefaultGradeClasses().catch((error) => {
         console.warn('Failed to prepare default grade classes:', error);
@@ -67,63 +74,19 @@ export class AuthService {
       });
     }
 
-    // Generate verification code and save to user
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    user.emailVerificationCode = verificationCode;
-    user.emailVerified = false;
-    await this.userRepository.save(user);
-
-    void this.sendVerificationEmail(user, verificationCode).catch((error) => {
-      console.warn('Failed to send verification email:', error);
-    });
-
     return {
-      message: 'Registration created. Please verify your email to continue.',
-      userId: user.id,
+      message: 'Registration submitted. Awaiting teacher approval.',
     };
   }
 
   async resendVerificationCode(email: string) {
-    const user = await this.userRepository.findOne({ where: { email } });
-    if (!user) {
-      throw new BadRequestException('User not found');
-    }
-
-    if (user.emailVerified) {
-      return { message: 'Email already verified' };
-    }
-
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    user.emailVerificationCode = verificationCode;
-    user.emailVerified = false;
-    await this.userRepository.save(user);
-
-    void this.sendVerificationEmail(user, verificationCode).catch((error) => {
-      console.warn('Failed to send verification email:', error);
-    });
-
-    return { message: 'Verification code sent. Please verify your email to continue.' };
+    // This endpoint is no longer used in the new flow
+    throw new BadRequestException('This endpoint is deprecated. Please wait for teacher approval.');
   }
 
   async verifyEmail(email: string, code: string) {
-    const user = await this.userRepository.findOne({ where: { email } });
-    if (!user) {
-      throw new BadRequestException('User not found');
-    }
-
-    if (user.emailVerified) {
-      return { message: 'Email already verified' };
-    }
-
-    if (!user.emailVerificationCode || user.emailVerificationCode !== code) {
-      throw new BadRequestException('Invalid verification code');
-    }
-
-    user.emailVerified = true;
-    user.emailVerificationCode = null;
-    await this.userRepository.save(user);
-
-    return { message: 'Email verified successfully' };
+    // This endpoint is no longer used in the new flow
+    throw new BadRequestException('This endpoint is deprecated. Please wait for teacher approval.');
   }
 
   private normalizeGrade(value?: string) {
@@ -220,8 +183,9 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.emailVerificationCode && !user.emailVerified) {
-      throw new UnauthorizedException('Please verify your email before logging in');
+    // Only students need approval. Teachers and admins can login immediately
+    if (user.role === 'student' && user.approvalStatus !== 'approved') {
+      throw new UnauthorizedException('Please wait until sir confirms your account');
     }
 
     const token = this.jwtService.sign({
@@ -247,16 +211,16 @@ export class AuthService {
     return this.userRepository.findOne({ where: { id } });
   }
 
-  private async sendVerificationEmail(user: User, verificationCode: string) {
+  private async sendVerificationEmail(userData: { email: string; name: string }, verificationCode: string) {
     try {
       await this.mailerService.sendMail({
-        to: user.email,
+        to: userData.email,
         subject: 'Welcome to Tuition Sir - Verify your email',
-        text: `Hello ${user.name},\n\nYour verification code is: ${verificationCode}`,
+        text: `Hello ${userData.name},\n\nYour verification code is: ${verificationCode}`,
         html: `
           <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937;">
             <h2 style="margin: 0 0 12px;">Welcome to Tuition Sir</h2>
-            <p>Hello ${user.name},</p>
+            <p>Hello ${userData.name},</p>
             <p>Your verification code is:</p>
             <div style="font-size: 28px; font-weight: 700; letter-spacing: 4px; margin: 16px 0;">${verificationCode}</div>
             <p>If you did not request this, you can ignore this email.</p>

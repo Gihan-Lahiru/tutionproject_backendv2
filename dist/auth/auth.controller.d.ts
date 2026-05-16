@@ -9,7 +9,6 @@ export declare class AuthController {
     constructor(authService: AuthService);
     register(registerDto: RegisterDto): Promise<{
         message: string;
-        userId: string;
     }>;
     login(loginDto: LoginDto): Promise<{
         token: string;
@@ -22,12 +21,8 @@ export declare class AuthController {
             institute: string;
         };
     }>;
-    verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<{
-        message: string;
-    }>;
-    resendVerificationCode(resendVerificationDto: ResendVerificationDto): Promise<{
-        message: string;
-    }>;
+    verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<void>;
+    resendVerificationCode(resendVerificationDto: ResendVerificationDto): Promise<void>;
     getCurrentUser(req: Request): Promise<Express.User>;
 }
 //# sourceMappingURL=auth.controller.d.ts.map

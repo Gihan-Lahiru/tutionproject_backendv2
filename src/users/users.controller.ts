@@ -12,6 +12,7 @@ import {
   UseInterceptors,
   BadRequestException,
   NotFoundException,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -48,8 +49,8 @@ export class UsersController {
   }
 
   @Get('students')
-  async findStudents() {
-    const users = await this.usersService.findByRole('student');
+  async findStudents(@Query('status') status?: string) {
+    const users = await this.usersService.findByRole('student', status);
     return { users: users.map((user) => this.sanitizeUser(user)) };
   }
 
@@ -144,6 +145,24 @@ export class UsersController {
       role: 'student',
     });
     return { user: this.sanitizeUser(user) };
+  }
+
+  @Post('students/:id/approve')
+  async approveStudent(@Param('id') id: string) {
+    const user = await this.usersService.approve(id);
+    return {
+      message: 'Student approved successfully',
+      user: this.sanitizeUser(user),
+    };
+  }
+
+  @Post('students/:id/reject')
+  async rejectStudent(@Param('id') id: string, @Body() body: { reason?: string }) {
+    const user = await this.usersService.reject(id, body.reason);
+    return {
+      message: 'Student rejected',
+      user: this.sanitizeUser(user),
+    };
   }
 
   @Delete(':id')

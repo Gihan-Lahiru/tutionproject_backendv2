@@ -44,8 +44,11 @@ export class User {
   @Column('text', { nullable: true })
   emailVerificationCode?: string;
 
-  @Column('boolean', { default: false })
+  @Column('boolean', { default: true })
   emailVerified: boolean;
+
+  @Column('text', { default: 'pending' })
+  approvalStatus: string; // pending, approved, rejected
 
   @Column('text', { default: 'active' })
   status: string; // active, inactive, suspended

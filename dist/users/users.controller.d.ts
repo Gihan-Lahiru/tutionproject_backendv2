@@ -6,7 +6,7 @@ export declare class UsersController {
     findAll(): Promise<{
         users: import("../database/entities/user.entity").User[];
     }>;
-    findStudents(): Promise<{
+    findStudents(status?: string): Promise<{
         users: any[];
     }>;
     getMe(req: any): Promise<import("../database/entities/user.entity").User>;
@@ -28,6 +28,16 @@ export declare class UsersController {
     findByRole(role: string): Promise<import("../database/entities/user.entity").User[]>;
     update(id: string, updateUserDto: any): Promise<any>;
     updateStudent(id: string, updateUserDto: any): Promise<{
+        user: any;
+    }>;
+    approveStudent(id: string): Promise<{
+        message: string;
+        user: any;
+    }>;
+    rejectStudent(id: string, body: {
+        reason?: string;
+    }): Promise<{
+        message: string;
         user: any;
     }>;
     delete(id: string): Promise<{

@@ -42,8 +42,8 @@ let UsersController = class UsersController {
     async findAll() {
         return { users: await this.usersService.findAll() };
     }
-    async findStudents() {
-        const users = await this.usersService.findByRole('student');
+    async findStudents(status) {
+        const users = await this.usersService.findByRole('student', status);
         return { users: users.map((user) => this.sanitizeUser(user)) };
     }
     async getMe(req) {
@@ -97,6 +97,20 @@ let UsersController = class UsersController {
         });
         return { user: this.sanitizeUser(user) };
     }
+    async approveStudent(id) {
+        const user = await this.usersService.approve(id);
+        return {
+            message: 'Student approved successfully',
+            user: this.sanitizeUser(user),
+        };
+    }
+    async rejectStudent(id, body) {
+        const user = await this.usersService.reject(id, body.reason);
+        return {
+            message: 'Student rejected',
+            user: this.sanitizeUser(user),
+        };
+    }
     async delete(id) {
         return this.usersService.delete(id);
     }
@@ -117,8 +131,9 @@ __decorate([
 ], UsersController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)('students'),
+    __param(0, (0, common_1.Query)('status')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "findStudents", null);
 __decorate([
@@ -206,6 +221,21 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], UsersController.prototype, "updateStudent", null);
+__decorate([
+    (0, common_1.Post)('students/:id/approve'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "approveStudent", null);
+__decorate([
+    (0, common_1.Post)('students/:id/reject'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], UsersController.prototype, "rejectStudent", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),

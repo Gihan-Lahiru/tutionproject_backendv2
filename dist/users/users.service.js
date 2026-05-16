@@ -82,8 +82,23 @@ let UsersService = class UsersService {
         Object.assign(user, updateUserDto);
         return this.userRepository.save(user);
     }
-    async findByRole(role) {
+    async findByRole(role, status) {
+        if (status) {
+            return this.userRepository.find({ where: { role, approvalStatus: status } });
+        }
         return this.userRepository.find({ where: { role } });
+    }
+    async approve(id) {
+        const user = await this.findById(id);
+        user.approvalStatus = 'approved';
+        user.status = 'active'; // Also mark as active
+        return this.userRepository.save(user);
+    }
+    async reject(id, reason) {
+        const user = await this.findById(id);
+        user.approvalStatus = 'rejected';
+        user.status = 'inactive'; // Mark as inactive when rejected
+        return this.userRepository.save(user);
     }
     async delete(id) {
         const user = await this.findById(id);

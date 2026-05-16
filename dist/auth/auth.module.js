@@ -33,6 +33,9 @@ exports.AuthModule = AuthModule = __decorate([
                     transport: {
                         host: config.get('MAIL_HOST'),
                         port: Number(config.get('MAIL_PORT')) || 587,
+                        secure: false,
+                        requireTLS: true,
+                        family: 4, // Force IPv4 only
                         auth: {
                             user: config.get('MAIL_USER'),
                             pass: config.get('MAIL_PASSWORD'),
