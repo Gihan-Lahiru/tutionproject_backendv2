@@ -56,6 +56,34 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   const port = process.env.PORT || 5000;
+  // Development-only debug route: create a notification directly
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      const expressApp = app.getHttpAdapter().getInstance();
+      const { NotificationsService } = await import('./notifications/notifications.service');
+      let notificationsService: any = null;
+      try {
+        notificationsService = app.get(NotificationsService);
+      } catch {}
+
+      if (expressApp && notificationsService) {
+        expressApp.post('/__debug/notify', async (req, res) => {
+          try {
+            const { userId, type = 'debug', message = 'Test notification from debug endpoint' } = req.body || {};
+            if (!userId) return res.status(400).json({ message: 'userId is required' });
+            const note = await notificationsService.create({ userId, type, message, read: 0 });
+            return res.json({ notification: note });
+          } catch (err) {
+            console.error('Debug notify error', err);
+            return res.status(500).json({ message: 'failed' });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to register debug notify route', err?.message || err);
+    }
+  }
+
   await app.listen(port);
   console.log(`🚀 Server running on http://localhost:${port}`);
   console.log(`📚 Swagger docs available at http://localhost:${port}/docs`);

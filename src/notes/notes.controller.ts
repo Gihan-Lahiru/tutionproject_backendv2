@@ -10,12 +10,12 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { NotesService } from './notes.service';
 import { CreateNoteDto } from './dto/create-note.dto';
 
 @Controller('api/notes')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class NotesController {
   constructor(private notesService: NotesService) {}
 

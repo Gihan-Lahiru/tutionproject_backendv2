@@ -15,7 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotesController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
-const passport_1 = require("@nestjs/passport");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const notes_service_1 = require("./notes.service");
 const create_note_dto_1 = require("./dto/create-note.dto");
 let NotesController = class NotesController {
@@ -68,7 +68,7 @@ __decorate([
 ], NotesController.prototype, "delete", null);
 exports.NotesController = NotesController = __decorate([
     (0, common_1.Controller)('api/notes'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [notes_service_1.NotesService])
 ], NotesController);
 //# sourceMappingURL=notes.controller.js.map

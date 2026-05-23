@@ -15,17 +15,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PapersController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
-const passport_1 = require("@nestjs/passport");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const papers_service_1 = require("./papers.service");
 let PapersController = class PapersController {
     constructor(papersService) {
         this.papersService = papersService;
     }
     async upload(file, uploadDto) {
-        return this.papersService.upload(file, uploadDto.title, uploadDto.grade);
+        return this.papersService.upload(file, uploadDto.title, uploadDto.grade, uploadDto.type, uploadDto.topic, uploadDto.classId);
     }
-    async findAll() {
-        return this.papersService.findAll();
+    async findAll(type) {
+        return this.papersService.findAll(type);
     }
     async findByGrade(grade) {
         return this.papersService.findByGrade(grade);
@@ -81,8 +81,9 @@ __decorate([
 ], PapersController.prototype, "upload", null);
 __decorate([
     (0, common_1.Get)(),
+    __param(0, (0, common_1.Query)('type')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PapersController.prototype, "findAll", null);
 __decorate([
@@ -131,7 +132,7 @@ __decorate([
 ], PapersController.prototype, "file", null);
 exports.PapersController = PapersController = __decorate([
     (0, common_1.Controller)('api/papers'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [papers_service_1.PapersService])
 ], PapersController);
 //# sourceMappingURL=papers.controller.js.map

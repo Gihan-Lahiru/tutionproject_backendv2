@@ -14,7 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AssignmentsController = void 0;
 const common_1 = require("@nestjs/common");
-const passport_1 = require("@nestjs/passport");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const assignments_service_1 = require("./assignments.service");
 const create_assignment_dto_1 = require("./dto/create-assignment.dto");
 const submit_assignment_dto_1 = require("./dto/submit-assignment.dto");
@@ -90,7 +90,7 @@ __decorate([
 ], AssignmentsController.prototype, "getSubmissions", null);
 exports.AssignmentsController = AssignmentsController = __decorate([
     (0, common_1.Controller)('api/assignments'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [assignments_service_1.AssignmentsService])
 ], AssignmentsController);
 //# sourceMappingURL=assignments.controller.js.map

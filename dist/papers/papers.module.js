@@ -13,6 +13,8 @@ const papers_controller_1 = require("./papers.controller");
 const papers_service_1 = require("./papers.service");
 const paper_entity_1 = require("../database/entities/paper.entity");
 const user_entity_1 = require("../database/entities/user.entity");
+const notification_entity_1 = require("../database/entities/notification.entity");
+const class_entity_1 = require("../database/entities/class.entity");
 const upload_service_1 = require("../common/services/upload.service");
 const notifications_module_1 = require("../notifications/notifications.module");
 let PapersModule = class PapersModule {
@@ -20,7 +22,7 @@ let PapersModule = class PapersModule {
 exports.PapersModule = PapersModule;
 exports.PapersModule = PapersModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([paper_entity_1.Paper, user_entity_1.User]), notifications_module_1.NotificationsModule],
+        imports: [typeorm_1.TypeOrmModule.forFeature([paper_entity_1.Paper, user_entity_1.User, notification_entity_1.Notification, class_entity_1.Class]), notifications_module_1.NotificationsModule],
         controllers: [papers_controller_1.PapersController],
         providers: [papers_service_1.PapersService, upload_service_1.UploadService],
         exports: [papers_service_1.PapersService],

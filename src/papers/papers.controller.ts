@@ -5,6 +5,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
   UseGuards,
   UseInterceptors,
   UploadedFile,
@@ -12,12 +13,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PapersService } from './papers.service';
 import { Response } from 'express';
 
 @Controller('api/papers')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class PapersController {
   constructor(private papersService: PapersService) {}
 
@@ -25,14 +26,14 @@ export class PapersController {
   @UseInterceptors(FileInterceptor('file'))
   async upload(
     @UploadedFile() file: any,
-    @Body() uploadDto: { title: string; grade: string },
+    @Body() uploadDto: { title: string; grade?: string; type?: string; topic?: string; classId?: string },
   ) {
-    return this.papersService.upload(file, uploadDto.title, uploadDto.grade);
+    return this.papersService.upload(file, uploadDto.title, uploadDto.grade, uploadDto.type, uploadDto.topic, uploadDto.classId);
   }
 
   @Get()
-  async findAll() {
-    return this.papersService.findAll();
+  async findAll(@Query('type') type?: string) {
+    return this.papersService.findAll(type);
   }
 
   @Get('grade/:grade')

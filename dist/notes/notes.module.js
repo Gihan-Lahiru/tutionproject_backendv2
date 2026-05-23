@@ -12,13 +12,16 @@ const typeorm_1 = require("@nestjs/typeorm");
 const notes_controller_1 = require("./notes.controller");
 const notes_service_1 = require("./notes.service");
 const note_entity_1 = require("../database/entities/note.entity");
+const notification_entity_1 = require("../database/entities/notification.entity");
+const class_entity_1 = require("../database/entities/class.entity");
+const user_entity_1 = require("../database/entities/user.entity");
 const upload_service_1 = require("../common/services/upload.service");
 let NotesModule = class NotesModule {
 };
 exports.NotesModule = NotesModule;
 exports.NotesModule = NotesModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([note_entity_1.Note])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([note_entity_1.Note, notification_entity_1.Notification, class_entity_1.Class, user_entity_1.User])],
         controllers: [notes_controller_1.NotesController],
         providers: [notes_service_1.NotesService, upload_service_1.UploadService],
     })

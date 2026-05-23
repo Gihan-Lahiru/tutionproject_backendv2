@@ -14,7 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VideosController = void 0;
 const common_1 = require("@nestjs/common");
-const passport_1 = require("@nestjs/passport");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const videos_service_1 = require("./videos.service");
 let VideosController = class VideosController {
     constructor(videosService) {
@@ -121,7 +121,7 @@ __decorate([
 ], VideosController.prototype, "delete", null);
 exports.VideosController = VideosController = __decorate([
     (0, common_1.Controller)('api/videos'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [videos_service_1.VideosService])
 ], VideosController);
 //# sourceMappingURL=videos.controller.js.map

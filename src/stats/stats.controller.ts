@@ -1,10 +1,10 @@
 import { Controller, Get, Param, UseGuards, Req } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { StatsService } from './stats.service';
 import { Request } from 'express';
 
 @Controller('api/stats')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class StatsController {
   constructor(private statsService: StatsService) {}
 

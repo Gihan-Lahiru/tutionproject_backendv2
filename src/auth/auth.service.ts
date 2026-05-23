@@ -43,7 +43,7 @@ export class AuthService {
     const existingUser = await this.userRepository.findOne({ where: { email } });
     if (existingUser) {
       if (existingUser.approvalStatus === 'pending') {
-        throw new BadRequestException('This email is already registered and is waiting for approval.');
+        throw new BadRequestException('Your registration has already been submitted and is awaiting teacher approval. Please wait for approval.');
       }
       throw new BadRequestException('This email is already registered. Please login.');
     }
@@ -195,14 +195,20 @@ export class AuthService {
     }
 
     // Only students need approval. Teachers and admins can login immediately
-    if (user.role === 'student' && user.approvalStatus === 'rejected') {
-      throw new UnauthorizedException('Your account request was rejected. Please contact the teacher.');
+    if (user.role === 'student') {
+      if (user.approvalStatus === 'pending') {
+        throw new UnauthorizedException('Your account is currently pending approval. Please wait until your teacher confirms your account before logging in.');
+      }
+      if (user.approvalStatus === 'rejected') {
+        throw new UnauthorizedException('Your account request was rejected. Please contact the teacher.');
+      }
     }
 
     const token = this.jwtService.sign({
       id: user.id,
       email: user.email,
       role: user.role,
+      approvalStatus: user.approvalStatus,
     });
 
     return {

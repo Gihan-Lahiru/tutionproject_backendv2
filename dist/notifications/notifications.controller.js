@@ -14,7 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationsController = void 0;
 const common_1 = require("@nestjs/common");
-const passport_1 = require("@nestjs/passport");
+const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const notifications_service_1 = require("./notifications.service");
 let NotificationsController = class NotificationsController {
     constructor(notificationsService) {
@@ -94,7 +94,7 @@ __decorate([
 ], NotificationsController.prototype, "delete", null);
 exports.NotificationsController = NotificationsController = __decorate([
     (0, common_1.Controller)('api/notifications'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [notifications_service_1.NotificationsService])
 ], NotificationsController);
 //# sourceMappingURL=notifications.controller.js.map

@@ -5,12 +5,18 @@ import { Note } from '../database/entities/note.entity';
 import { CreateNoteDto } from './dto/create-note.dto';
 import { UploadService } from '../common/services/upload.service';
 import { v4 as uuid } from 'uuid';
+import { Notification } from '../database/entities/notification.entity';
+import { Class } from '../database/entities/class.entity';
+import { User } from '../database/entities/user.entity';
 
 @Injectable()
 export class NotesService {
   constructor(
     @InjectRepository(Note) private noteRepository: Repository<Note>,
     private uploadService: UploadService,
+    @InjectRepository(Notification) private notificationRepository: Repository<Notification>,
+    @InjectRepository(Class) private classRepository: Repository<Class>,
+    @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
   async create(
@@ -29,7 +35,43 @@ export class NotesService {
       originalName: (uploadResult as any).original_name || file.originalname,
     });
 
-    return this.noteRepository.save(note);
+    const saved = await this.noteRepository.save(note);
+
+    // create notifications for students in target class
+    try {
+      const classIdVal = String(saved.classId || '').trim();
+      const titleVal = String(saved.title || '').trim() || 'New note';
+
+      let targetStudents: User[] = [];
+
+      if (classIdVal) {
+        const fullClass = await this.classRepository.findOne({ where: { id: classIdVal }, relations: ['students'] });
+        const classStudents = fullClass && Array.isArray(fullClass.students) ? fullClass.students : [];
+        const classLocation = String(fullClass?.location || '').trim().toLowerCase();
+
+        targetStudents = classStudents.filter((student) => {
+          const studentInstitute = String(student?.institute || '').trim().toLowerCase();
+          if (!classLocation) return true;
+          return studentInstitute === classLocation;
+        });
+      }
+
+      if (targetStudents.length) {
+        const notifications = targetStudents.map((student) => ({
+          id: uuid(),
+          userId: student.id,
+          type: 'note',
+          message: `${titleVal.length > 120 ? titleVal.slice(0, 117) + '...' : titleVal}`,
+          read: 0,
+        }));
+
+        await this.notificationRepository.save(notifications as any);
+      }
+    } catch (err) {
+      console.warn('Failed to create notifications for note upload', err?.message || err);
+    }
+
+    return saved;
   }
 
   async findByClass(classId: string) {

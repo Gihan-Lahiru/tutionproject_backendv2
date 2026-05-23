@@ -17,29 +17,75 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const paper_entity_1 = require("../database/entities/paper.entity");
+const notification_entity_1 = require("../database/entities/notification.entity");
+const class_entity_1 = require("../database/entities/class.entity");
+const user_entity_1 = require("../database/entities/user.entity");
 const upload_service_1 = require("../common/services/upload.service");
 const uuid_1 = require("uuid");
 const fs_1 = require("fs");
 const path_1 = require("path");
 let PapersService = class PapersService {
-    constructor(paperRepository, uploadService) {
+    constructor(paperRepository, uploadService, notificationRepository, classRepository, userRepository) {
         this.paperRepository = paperRepository;
         this.uploadService = uploadService;
+        this.notificationRepository = notificationRepository;
+        this.classRepository = classRepository;
+        this.userRepository = userRepository;
     }
-    async upload(file, title, grade) {
+    async upload(file, title, grade, type, topic, classId) {
         const uploadResult = await this.uploadService.uploadFile(file, 'tuition_sir/papers');
         const paper = this.paperRepository.create({
             id: (0, uuid_1.v4)(),
             title,
-            grade,
+            grade: grade || '',
+            type: type || 'Paper',
+            topic: topic || '',
+            classId: classId || '',
             fileUrl: uploadResult.secure_url,
             filePublicId: uploadResult.public_id,
             originalName: uploadResult.original_name || file.originalname,
         });
-        return this.paperRepository.save(paper);
+        const saved = await this.paperRepository.save(paper);
+        // create notifications for students in target class or grade
+        try {
+            const classId = String(saved.classId || '').trim();
+            const gradeVal = String(saved.grade || '').trim();
+            const titleVal = String(saved.title || '').trim() || 'New paper';
+            let targetStudents = [];
+            if (classId) {
+                const fullClass = await this.classRepository.findOne({ where: { id: classId }, relations: ['students'] });
+                const classStudents = fullClass && Array.isArray(fullClass.students) ? fullClass.students : [];
+                const classLocation = String(fullClass?.location || '').trim().toLowerCase();
+                targetStudents = classStudents.filter((student) => {
+                    const studentInstitute = String(student?.institute || '').trim().toLowerCase();
+                    if (!classLocation)
+                        return true;
+                    return studentInstitute === classLocation;
+                });
+            }
+            else if (gradeVal) {
+                targetStudents = await this.userRepository.find({ where: { role: 'student', grade: gradeVal } });
+            }
+            if (targetStudents.length) {
+                const notifications = targetStudents.map((student) => ({
+                    id: (0, uuid_1.v4)(),
+                    userId: student.id,
+                    type: (saved.type || 'paper').toLowerCase(),
+                    message: `New ${saved.type || 'Material'}: ${titleVal.length > 100 ? titleVal.slice(0, 97) + '...' : titleVal}`,
+                    read: 0,
+                }));
+                await this.notificationRepository.save(notifications);
+            }
+        }
+        catch (err) {
+            console.warn('Failed to create notifications for paper upload', err?.message || err);
+        }
+        return saved;
     }
-    async findAll() {
+    async findAll(type) {
+        const whereClause = type ? { type } : {};
         return this.paperRepository.find({
+            where: whereClause,
             order: { createdAt: 'DESC' },
         });
     }
@@ -119,7 +165,13 @@ exports.PapersService = PapersService;
 exports.PapersService = PapersService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(paper_entity_1.Paper)),
+    __param(2, (0, typeorm_1.InjectRepository)(notification_entity_1.Notification)),
+    __param(3, (0, typeorm_1.InjectRepository)(class_entity_1.Class)),
+    __param(4, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
-        upload_service_1.UploadService])
+        upload_service_1.UploadService,
+        typeorm_2.Repository,
+        typeorm_2.Repository,
+        typeorm_2.Repository])
 ], PapersService);
 //# sourceMappingURL=papers.service.js.map

@@ -18,6 +18,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // remove this log after debugging is complete
     // eslint-disable-next-line no-console
     console.log('[JwtStrategy] payload:', payload);
-    return { id: payload.id, email: payload.email, role: payload.role };
+    return { id: payload.id, email: payload.email, role: payload.role, approvalStatus: payload.approvalStatus };
   }
 }

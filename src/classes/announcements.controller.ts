@@ -1,10 +1,10 @@
 import { Controller, Post, Get, Param, Body, UseGuards, Request } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { AnnouncementsService } from './announcements.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 
 @Controller('api/classes')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class AnnouncementsController {
   constructor(private announcementsService: AnnouncementsService) {}
 
