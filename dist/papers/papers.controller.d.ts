@@ -1,4 +1,5 @@
 import { PapersService } from './papers.service';
+import { Response } from 'express';
 export declare class PapersController {
     private papersService;
     constructor(papersService: PapersService);
@@ -12,5 +13,10 @@ export declare class PapersController {
     delete(id: string): Promise<{
         message: string;
     }>;
+    incrementDownload(id: string): Promise<{
+        downloads: any;
+    }>;
+    download(id: string, res: Response): Promise<void>;
+    file(id: string, res: Response): Promise<void>;
 }
 //# sourceMappingURL=papers.controller.d.ts.map

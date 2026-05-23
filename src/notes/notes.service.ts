@@ -26,6 +26,7 @@ export class NotesService {
       classId,
       fileUrl: (uploadResult as any).secure_url,
       fileType: file.mimetype,
+      originalName: (uploadResult as any).original_name || file.originalname,
     });
 
     return this.noteRepository.save(note);

@@ -5,6 +5,7 @@ export declare class Note {
     title: string;
     classId?: string;
     fileUrl?: string;
+    originalName?: string;
     fileType?: string;
     uploadedBy?: string;
     uploadedAt: Date;

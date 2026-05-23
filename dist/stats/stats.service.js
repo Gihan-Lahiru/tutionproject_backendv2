@@ -16,6 +16,7 @@ exports.StatsService = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
+const typeorm_3 = require("typeorm");
 const class_entity_1 = require("../database/entities/class.entity");
 const payment_entity_1 = require("../database/entities/payment.entity");
 const video_entity_1 = require("../database/entities/video.entity");
@@ -63,18 +64,10 @@ let StatsService = class StatsService {
             const totalClasses = await this.classRepository.count({
                 where: { teacherId },
             });
-            // Get all classes to count unique students
-            const teacherClasses = await this.classRepository.find({
-                where: { teacherId },
-                relations: ['students'],
+            // Count all student accounts in the system so the dashboard reflects real data.
+            const totalStudents = await this.userRepository.count({
+                where: { role: 'student' },
             });
-            const studentSet = new Set();
-            teacherClasses.forEach((cls) => {
-                cls.students?.forEach((student) => {
-                    studentSet.add(student.id);
-                });
-            });
-            const totalStudents = studentSet.size;
             // Get total videos for this teacher
             const totalVideos = await this.videoRepository.count({
                 where: { teacherId },
@@ -95,15 +88,41 @@ let StatsService = class StatsService {
                 return paymentDate >= currentMonthStart && paymentDate < currentMonthEnd;
             })
                 .reduce((sum, payment) => sum + Number(payment.amount), 0);
+            const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastMonthRevenue = monthlyPayments
+                .filter((payment) => {
+                const paymentDate = new Date(payment.createdAt);
+                return paymentDate >= lastMonthStart && paymentDate < lastMonthEnd;
+            })
+                .reduce((sum, payment) => sum + Number(payment.amount), 0);
+            const revenueTrend = lastMonthRevenue > 0
+                ? Math.round(((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
+                : (monthlyRevenue > 0 ? 100 : 0);
+            const currentMonthStudents = await this.userRepository.count({
+                where: {
+                    role: 'student',
+                    createdAt: (0, typeorm_3.Between)(currentMonthStart, currentMonthEnd),
+                },
+            });
+            const lastMonthStudents = await this.userRepository.count({
+                where: {
+                    role: 'student',
+                    createdAt: (0, typeorm_3.Between)(lastMonthStart, lastMonthEnd),
+                },
+            });
+            const studentTrend = lastMonthStudents > 0
+                ? Math.round(((currentMonthStudents - lastMonthStudents) / lastMonthStudents) * 100)
+                : (currentMonthStudents > 0 ? 100 : 0);
             return {
                 totalClasses,
                 totalStudents,
                 totalVideos,
                 monthlyRevenue,
                 trends: {
-                    students: totalStudents > 0 ? '+' + totalStudents : '0',
-                    classes: totalClasses > 0 ? '+' + totalClasses : '0',
-                    revenue: monthlyRevenue > 0 ? '+' + monthlyRevenue : '0',
+                    students: { value: studentTrend, isPositive: studentTrend >= 0 },
+                    classes: { value: 0, isPositive: true },
+                    revenue: { value: revenueTrend, isPositive: revenueTrend >= 0 },
                 },
             };
         }

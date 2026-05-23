@@ -23,6 +23,9 @@ export class Note {
   fileUrl?: string;
 
   @Column('text', { nullable: true })
+  originalName?: string;
+
+  @Column('text', { nullable: true })
   fileType?: string;
 
   @Column('text', { nullable: true })

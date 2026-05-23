@@ -27,9 +27,18 @@ export declare class StatsController {
         totalVideos: number;
         monthlyRevenue: number;
         trends: {
-            students: string;
-            classes: string;
-            revenue: string;
+            students: {
+                value: number;
+                isPositive: boolean;
+            };
+            classes: {
+                value: number;
+                isPositive: boolean;
+            };
+            revenue: {
+                value: number;
+                isPositive: boolean;
+            };
         };
     }>;
     getTeacherActivity(req: Request): Promise<{

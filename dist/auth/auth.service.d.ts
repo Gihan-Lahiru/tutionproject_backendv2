@@ -15,6 +15,8 @@ export declare class AuthService {
     constructor(userRepository: Repository<User>, classRepository: Repository<Class>, jwtService: JwtService, mailerService: MailerService);
     register(registerDto: RegisterDto): Promise<{
         message: string;
+        approvalStatus: string;
+        role: string;
     }>;
     resendVerificationCode(email: string): Promise<void>;
     verifyEmail(email: string, code: string): Promise<void>;
@@ -32,6 +34,7 @@ export declare class AuthService {
             role: string;
             grade: string;
             institute: string;
+            approvalStatus: string;
         };
     }>;
     validateUser(id: string): Promise<User>;

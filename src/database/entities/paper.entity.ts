@@ -29,6 +29,9 @@ export class Paper {
   fileUrl: string;
 
   @Column('text', { nullable: true })
+  originalName?: string;
+
+  @Column('text', { nullable: true })
   filePublicId?: string;
 
   @Column('text', { nullable: true })
@@ -36,4 +39,7 @@ export class Paper {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column('integer', { default: 0 })
+  downloads: number;
 }

@@ -35,6 +35,10 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)('text', { nullable: true }),
     __metadata("design:type", String)
+], Note.prototype, "originalName", void 0);
+__decorate([
+    (0, typeorm_1.Column)('text', { nullable: true }),
+    __metadata("design:type", String)
 ], Note.prototype, "fileType", void 0);
 __decorate([
     (0, typeorm_1.Column)('text', { nullable: true }),

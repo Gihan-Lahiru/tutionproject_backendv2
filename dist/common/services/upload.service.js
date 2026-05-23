@@ -5,36 +5,48 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
+var UploadService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UploadService = void 0;
 const common_1 = require("@nestjs/common");
-const cloudinary_1 = require("cloudinary");
-const cloudinary_config_1 = require("../../config/cloudinary.config");
-let UploadService = class UploadService {
+const fs_1 = require("fs");
+const path_1 = require("path");
+const uuid_1 = require("uuid");
+let UploadService = UploadService_1 = class UploadService {
     constructor() {
-        (0, cloudinary_config_1.setupCloudinary)();
+        this.logger = new common_1.Logger(UploadService_1.name);
     }
     async uploadFile(file, folder) {
-        return new Promise((resolve, reject) => {
-            const stream = cloudinary_1.v2.uploader.upload_stream({ folder }, (error, result) => {
-                if (error)
-                    reject(error);
-                else
-                    resolve(result);
-            });
-            stream.end(file.buffer);
-        });
+        // file: { originalname, buffer }
+        const uploadsRoot = (0, path_1.join)(process.cwd(), 'uploads');
+        const targetFolder = (0, path_1.join)(uploadsRoot, folder);
+        await fs_1.promises.mkdir(targetFolder, { recursive: true });
+        const extMatch = (file.originalname || '').match(/\.([a-z0-9]+)$/i);
+        const ext = extMatch ? `.${extMatch[1]}` : '';
+        const filename = `${(0, uuid_1.v4)()}${ext}`;
+        const originalName = String(file.originalname || filename).trim();
+        const relativePath = `${folder}/${filename}`;
+        const absolutePath = (0, path_1.join)(uploadsRoot, relativePath);
+        await fs_1.promises.writeFile(absolutePath, file.buffer);
+        const host = process.env.APP_HOST || `http://localhost:5000`;
+        const secure_url = `${host}/uploads/${relativePath}`;
+        return { secure_url, public_id: relativePath, original_name: originalName };
     }
     async deleteFile(publicId) {
-        return cloudinary_1.v2.uploader.destroy(publicId);
+        try {
+            const uploadsRoot = (0, path_1.join)(process.cwd(), 'uploads');
+            const absolutePath = (0, path_1.join)(uploadsRoot, publicId);
+            await fs_1.promises.unlink(absolutePath);
+            return { result: 'deleted' };
+        }
+        catch (err) {
+            this.logger.warn(`deleteFile failed for ${publicId}: ${err?.message || err}`);
+            return { result: 'not_found' };
+        }
     }
 };
 exports.UploadService = UploadService;
-exports.UploadService = UploadService = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [])
+exports.UploadService = UploadService = UploadService_1 = __decorate([
+    (0, common_1.Injectable)()
 ], UploadService);
 //# sourceMappingURL=upload.service.js.map

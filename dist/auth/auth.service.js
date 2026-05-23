@@ -82,21 +82,26 @@ let AuthService = class AuthService {
         // Check if user already exists
         const existingUser = await this.userRepository.findOne({ where: { email } });
         if (existingUser) {
-            throw new common_1.BadRequestException('User with this email already exists');
+            if (existingUser.approvalStatus === 'pending') {
+                throw new common_1.BadRequestException('This email is already registered and is waiting for approval.');
+            }
+            throw new common_1.BadRequestException('This email is already registered. Please login.');
         }
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
-        // Create user with pending approval status
+        const normalizedRole = role || 'student';
+        const approvalStatus = normalizedRole === 'student' ? 'pending' : 'approved';
+        // Create user with role-specific approval status
         const user = this.userRepository.create({
             id: (0, uuid_1.v4)(),
             email,
             password: hashedPassword,
             name,
-            role: role || 'student',
+            role: normalizedRole,
             grade,
             institute,
             emailVerified: true, // Email is verified (we trust registration)
-            approvalStatus: 'pending', // But approval is pending from teacher/admin
+            approvalStatus,
             status: 'active',
         });
         await this.userRepository.save(user);
@@ -110,7 +115,11 @@ let AuthService = class AuthService {
             });
         }
         return {
-            message: 'Registration submitted. Awaiting teacher approval.',
+            message: approvalStatus === 'pending'
+                ? 'Registration submitted. Awaiting teacher approval.'
+                : 'Registration completed successfully.',
+            approvalStatus,
+            role: normalizedRole,
         };
     }
     async resendVerificationCode(email) {
@@ -187,8 +196,8 @@ let AuthService = class AuthService {
             throw new common_1.UnauthorizedException('Invalid credentials');
         }
         // Only students need approval. Teachers and admins can login immediately
-        if (user.role === 'student' && user.approvalStatus !== 'approved') {
-            throw new common_1.UnauthorizedException('Please wait until sir confirms your account');
+        if (user.role === 'student' && user.approvalStatus === 'rejected') {
+            throw new common_1.UnauthorizedException('Your account request was rejected. Please contact the teacher.');
         }
         const token = this.jwtService.sign({
             id: user.id,
@@ -204,6 +213,7 @@ let AuthService = class AuthService {
                 role: user.role,
                 grade: user.grade,
                 institute: user.institute,
+                approvalStatus: user.approvalStatus,
             },
         };
     }

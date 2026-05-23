@@ -32,6 +32,7 @@ let NotesService = class NotesService {
             classId,
             fileUrl: uploadResult.secure_url,
             fileType: file.mimetype,
+            originalName: uploadResult.original_name || file.originalname,
         });
         return this.noteRepository.save(note);
     }

@@ -9,6 +9,8 @@ export declare class AuthController {
     constructor(authService: AuthService);
     register(registerDto: RegisterDto): Promise<{
         message: string;
+        approvalStatus: string;
+        role: string;
     }>;
     login(loginDto: LoginDto): Promise<{
         token: string;
@@ -19,6 +21,7 @@ export declare class AuthController {
             role: string;
             grade: string;
             institute: string;
+            approvalStatus: string;
         };
     }>;
     verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<void>;

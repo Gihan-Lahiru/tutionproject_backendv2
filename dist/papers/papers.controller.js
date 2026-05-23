@@ -36,6 +36,38 @@ let PapersController = class PapersController {
     async delete(id) {
         return this.papersService.delete(id);
     }
+    async incrementDownload(id) {
+        const updated = await this.papersService.incrementDownload(id);
+        return { downloads: updated.downloads || 0 };
+    }
+    async download(id, res) {
+        const paper = await this.papersService.findById(id);
+        if (!paper || !paper.fileUrl) {
+            throw new common_1.NotFoundException('Paper file not found');
+        }
+        const localPath = await this.papersService.getDownloadPath(paper);
+        const filename = paper.originalName || this.papersService.getDownloadFilename(paper);
+        if (localPath) {
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            return res.sendFile(localPath);
+        }
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        return res.redirect(paper.fileUrl);
+    }
+    async file(id, res) {
+        const paper = await this.papersService.findById(id);
+        if (!paper || !paper.fileUrl) {
+            throw new common_1.NotFoundException('Paper file not found');
+        }
+        const localPath = await this.papersService.getDownloadPath(paper);
+        const filename = paper.originalName || this.papersService.getDownloadFilename(paper);
+        if (localPath) {
+            res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            return res.sendFile(localPath);
+        }
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        return res.redirect(paper.fileUrl);
+    }
 };
 exports.PapersController = PapersController;
 __decorate([
@@ -74,6 +106,29 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], PapersController.prototype, "delete", null);
+__decorate([
+    (0, common_1.Post)(':id/download'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PapersController.prototype, "incrementDownload", null);
+__decorate([
+    (0, common_1.Get)(':id/download'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], PapersController.prototype, "download", null);
+__decorate([
+    (0, common_1.Get)(':id/file'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], PapersController.prototype, "file", null);
 exports.PapersController = PapersController = __decorate([
     (0, common_1.Controller)('api/papers'),
     (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),

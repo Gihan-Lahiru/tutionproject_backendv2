@@ -45,6 +45,10 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)('text', { nullable: true }),
     __metadata("design:type", String)
+], Paper.prototype, "originalName", void 0);
+__decorate([
+    (0, typeorm_1.Column)('text', { nullable: true }),
+    __metadata("design:type", String)
 ], Paper.prototype, "filePublicId", void 0);
 __decorate([
     (0, typeorm_1.Column)('text', { nullable: true }),
@@ -54,6 +58,10 @@ __decorate([
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], Paper.prototype, "createdAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)('integer', { default: 0 }),
+    __metadata("design:type", Number)
+], Paper.prototype, "downloads", void 0);
 exports.Paper = Paper = __decorate([
     (0, typeorm_1.Entity)('papers')
 ], Paper);
