@@ -78,7 +78,7 @@ let AuthService = class AuthService {
         ];
     }
     async register(registerDto) {
-        const { email, password, name, role, grade, institute } = registerDto;
+        const { email, password, name, role, grade, institute, phone } = registerDto;
         // Check if user already exists
         const existingUser = await this.userRepository.findOne({ where: { email } });
         if (existingUser) {
@@ -98,6 +98,7 @@ let AuthService = class AuthService {
             password: hashedPassword,
             name,
             role: normalizedRole,
+            phone,
             grade,
             institute,
             emailVerified: true, // Email is verified (we trust registration)
@@ -217,6 +218,7 @@ let AuthService = class AuthService {
                 email: user.email,
                 name: user.name,
                 role: user.role,
+                phone: user.phone,
                 grade: user.grade,
                 institute: user.institute,
                 approvalStatus: user.approvalStatus,

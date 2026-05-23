@@ -3,6 +3,7 @@ export declare class RegisterDto {
     password: string;
     name: string;
     role?: string;
+    phone?: string;
     grade?: string;
     institute?: string;
 }

@@ -19,6 +19,7 @@ export declare class AuthController {
             email: string;
             name: string;
             role: string;
+            phone: string;
             grade: string;
             institute: string;
             approvalStatus: string;
