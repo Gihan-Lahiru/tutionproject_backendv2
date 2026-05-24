@@ -16,12 +16,13 @@ const notification_entity_1 = require("../database/entities/notification.entity"
 const class_entity_1 = require("../database/entities/class.entity");
 const user_entity_1 = require("../database/entities/user.entity");
 const upload_service_1 = require("../common/services/upload.service");
+const pdf_watermark_module_1 = require("../common/services/pdf-watermark.module");
 let NotesModule = class NotesModule {
 };
 exports.NotesModule = NotesModule;
 exports.NotesModule = NotesModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([note_entity_1.Note, notification_entity_1.Notification, class_entity_1.Class, user_entity_1.User])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([note_entity_1.Note, notification_entity_1.Notification, class_entity_1.Class, user_entity_1.User]), pdf_watermark_module_1.PdfWatermarkModule],
         controllers: [notes_controller_1.NotesController],
         providers: [notes_service_1.NotesService, upload_service_1.UploadService],
     })

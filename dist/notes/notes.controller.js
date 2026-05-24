@@ -18,9 +18,11 @@ const platform_express_1 = require("@nestjs/platform-express");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const notes_service_1 = require("./notes.service");
 const create_note_dto_1 = require("./dto/create-note.dto");
+const pdf_watermark_service_1 = require("../common/services/pdf-watermark.service");
 let NotesController = class NotesController {
-    constructor(notesService) {
+    constructor(notesService, pdfWatermarkService) {
         this.notesService = notesService;
+        this.pdfWatermarkService = pdfWatermarkService;
     }
     async create(classId, createNoteDto, file) {
         return this.notesService.create(createNoteDto, file, classId);
@@ -30,6 +32,24 @@ let NotesController = class NotesController {
     }
     async findAll() {
         return this.notesService.findAll();
+    }
+    async download(id, res, req) {
+        const note = await this.notesService.findById(id);
+        if (!note || !note.fileUrl) {
+            throw new common_1.NotFoundException('Note file not found');
+        }
+        const filename = note.originalName || `Note_${note.title.replace(/\s+/g, '_')}`;
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}.pdf"`);
+        const isPdf = note.fileUrl.toLowerCase().includes('.pdf');
+        if (isPdf) {
+            const watermarkedBuffer = await this.pdfWatermarkService.addWatermarkToPdfUrl(note.fileUrl, req.user.name, req.user.grade);
+            if (watermarkedBuffer) {
+                res.setHeader('Content-Type', 'application/pdf');
+                res.setHeader('Content-Length', watermarkedBuffer.length);
+                return res.send(watermarkedBuffer);
+            }
+        }
+        return res.redirect(note.fileUrl);
     }
     async delete(id) {
         return this.notesService.delete(id);
@@ -60,6 +80,15 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], NotesController.prototype, "findAll", null);
 __decorate([
+    (0, common_1.Get)(':id/download'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Res)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], NotesController.prototype, "download", null);
+__decorate([
     (0, common_1.Delete)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -69,6 +98,7 @@ __decorate([
 exports.NotesController = NotesController = __decorate([
     (0, common_1.Controller)('api/notes'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
-    __metadata("design:paramtypes", [notes_service_1.NotesService])
+    __metadata("design:paramtypes", [notes_service_1.NotesService,
+        pdf_watermark_service_1.PdfWatermarkService])
 ], NotesController);
 //# sourceMappingURL=notes.controller.js.map

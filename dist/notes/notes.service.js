@@ -84,6 +84,9 @@ let NotesService = class NotesService {
             order: { createdAt: 'DESC' },
         });
     }
+    async findById(id) {
+        return this.noteRepository.findOne({ where: { id } });
+    }
     async delete(id) {
         const note = await this.noteRepository.findOne({ where: { id } });
         if (!note) {

@@ -1,8 +1,10 @@
 import { PapersService } from './papers.service';
+import { PdfWatermarkService } from '../common/services/pdf-watermark.service';
 import { Response } from 'express';
 export declare class PapersController {
     private papersService;
-    constructor(papersService: PapersService);
+    private pdfWatermarkService;
+    constructor(papersService: PapersService, pdfWatermarkService: PdfWatermarkService);
     upload(file: any, uploadDto: {
         title: string;
         grade?: string;
@@ -19,7 +21,7 @@ export declare class PapersController {
     incrementDownload(id: string): Promise<{
         downloads: any;
     }>;
-    download(id: string, res: Response): Promise<void>;
-    file(id: string, res: Response): Promise<void>;
+    download(id: string, res: Response, req: any): Promise<void | Response<any, Record<string, any>>>;
+    file(id: string, res: Response, req: any): Promise<void | Response<any, Record<string, any>>>;
 }
 //# sourceMappingURL=papers.controller.d.ts.map

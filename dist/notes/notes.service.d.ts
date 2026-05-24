@@ -15,6 +15,7 @@ export declare class NotesService {
     create(createNoteDto: CreateNoteDto, file: any, classId: string): Promise<Note>;
     findByClass(classId: string): Promise<Note[]>;
     findAll(): Promise<Note[]>;
+    findById(id: string): Promise<Note>;
     delete(id: string): Promise<{
         message: string;
     }>;

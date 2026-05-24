@@ -10,17 +10,22 @@ import {
   UseInterceptors,
   UploadedFile,
   Res,
+  Req,
   NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PapersService } from './papers.service';
+import { PdfWatermarkService } from '../common/services/pdf-watermark.service';
 import { Response } from 'express';
 
 @Controller('api/papers')
 @UseGuards(JwtAuthGuard)
 export class PapersController {
-  constructor(private papersService: PapersService) {}
+  constructor(
+    private papersService: PapersService,
+    private pdfWatermarkService: PdfWatermarkService
+  ) {}
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
@@ -58,38 +63,70 @@ export class PapersController {
   }
 
   @Get(':id/download')
-  async download(@Param('id') id: string, @Res() res: Response) {
+  async download(@Param('id') id: string, @Res() res: Response, @Req() req: any) {
     const paper = await this.papersService.findById(id);
     if (!paper || !paper.fileUrl) {
       throw new NotFoundException('Paper file not found');
     }
 
-    const localPath = await this.papersService.getDownloadPath(paper);
-    const filename = paper.originalName || this.papersService.getDownloadFilename(paper)
-    if (localPath) {
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
-      return res.sendFile(localPath)
+    const filename = paper.originalName || this.papersService.getDownloadFilename(paper);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    const isPdf = filename.toLowerCase().endsWith('.pdf');
+
+    if (isPdf) {
+      const watermarkedBuffer = await this.pdfWatermarkService.addWatermarkToPdfUrl(
+        paper.fileUrl,
+        req.user.name,
+        req.user.grade
+      );
+      
+      if (watermarkedBuffer) {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Length', watermarkedBuffer.length);
+        return res.send(watermarkedBuffer);
+      }
     }
 
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    const localPath = await this.papersService.getDownloadPath(paper);
+    if (localPath) {
+      return res.sendFile(localPath);
+    }
+
     return res.redirect(paper.fileUrl);
   }
 
   @Get(':id/file')
-  async file(@Param('id') id: string, @Res() res: Response) {
+  async file(@Param('id') id: string, @Res() res: Response, @Req() req: any) {
     const paper = await this.papersService.findById(id);
     if (!paper || !paper.fileUrl) {
       throw new NotFoundException('Paper file not found');
     }
 
-    const localPath = await this.papersService.getDownloadPath(paper);
-    const filename = paper.originalName || this.papersService.getDownloadFilename(paper)
-    if (localPath) {
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
-      return res.sendFile(localPath)
+    const filename = paper.originalName || this.papersService.getDownloadFilename(paper);
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+
+    const isPdf = filename.toLowerCase().endsWith('.pdf');
+
+    if (isPdf) {
+      const watermarkedBuffer = await this.pdfWatermarkService.addWatermarkToPdfUrl(
+        paper.fileUrl,
+        req.user.name,
+        req.user.grade
+      );
+      
+      if (watermarkedBuffer) {
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Length', watermarkedBuffer.length);
+        return res.send(watermarkedBuffer);
+      }
     }
 
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+    const localPath = await this.papersService.getDownloadPath(paper);
+    if (localPath) {
+      return res.sendFile(localPath);
+    }
+
     return res.redirect(paper.fileUrl);
   }
 }

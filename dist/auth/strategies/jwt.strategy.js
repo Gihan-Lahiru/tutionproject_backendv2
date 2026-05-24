@@ -28,7 +28,14 @@ let JwtStrategy = class JwtStrategy extends (0, passport_1.PassportStrategy)(pas
         // remove this log after debugging is complete
         // eslint-disable-next-line no-console
         console.log('[JwtStrategy] payload:', payload);
-        return { id: payload.id, email: payload.email, role: payload.role, approvalStatus: payload.approvalStatus };
+        return {
+            id: payload.id,
+            email: payload.email,
+            role: payload.role,
+            approvalStatus: payload.approvalStatus,
+            name: payload.name,
+            grade: payload.grade
+        };
     }
 };
 exports.JwtStrategy = JwtStrategy;

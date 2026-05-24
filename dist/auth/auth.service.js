@@ -210,6 +210,8 @@ let AuthService = class AuthService {
             email: user.email,
             role: user.role,
             approvalStatus: user.approvalStatus,
+            name: user.name,
+            grade: user.grade,
         });
         return {
             token,

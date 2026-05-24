@@ -87,6 +87,10 @@ export class NotesService {
     });
   }
 
+  async findById(id: string) {
+    return this.noteRepository.findOne({ where: { id } });
+  }
+
   async delete(id: string) {
     const note = await this.noteRepository.findOne({ where: { id } });
 

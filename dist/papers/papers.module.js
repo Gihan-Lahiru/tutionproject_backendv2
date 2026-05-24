@@ -17,12 +17,13 @@ const notification_entity_1 = require("../database/entities/notification.entity"
 const class_entity_1 = require("../database/entities/class.entity");
 const upload_service_1 = require("../common/services/upload.service");
 const notifications_module_1 = require("../notifications/notifications.module");
+const pdf_watermark_module_1 = require("../common/services/pdf-watermark.module");
 let PapersModule = class PapersModule {
 };
 exports.PapersModule = PapersModule;
 exports.PapersModule = PapersModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([paper_entity_1.Paper, user_entity_1.User, notification_entity_1.Notification, class_entity_1.Class]), notifications_module_1.NotificationsModule],
+        imports: [typeorm_1.TypeOrmModule.forFeature([paper_entity_1.Paper, user_entity_1.User, notification_entity_1.Notification, class_entity_1.Class]), notifications_module_1.NotificationsModule, pdf_watermark_module_1.PdfWatermarkModule],
         controllers: [papers_controller_1.PapersController],
         providers: [papers_service_1.PapersService, upload_service_1.UploadService],
         exports: [papers_service_1.PapersService],
