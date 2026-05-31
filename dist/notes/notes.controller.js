@@ -16,6 +16,7 @@ exports.NotesController = void 0;
 const common_1 = require("@nestjs/common");
 const platform_express_1 = require("@nestjs/platform-express");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const dashboard_access_guard_1 = require("../common/guards/dashboard-access.guard");
 const notes_service_1 = require("./notes.service");
 const create_note_dto_1 = require("./dto/create-note.dto");
 const pdf_watermark_service_1 = require("../common/services/pdf-watermark.service");
@@ -97,7 +98,7 @@ __decorate([
 ], NotesController.prototype, "delete", null);
 exports.NotesController = NotesController = __decorate([
     (0, common_1.Controller)('api/notes'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, dashboard_access_guard_1.DashboardAccessGuard),
     __metadata("design:paramtypes", [notes_service_1.NotesService,
         pdf_watermark_service_1.PdfWatermarkService])
 ], NotesController);

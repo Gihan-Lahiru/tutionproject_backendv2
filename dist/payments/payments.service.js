@@ -17,16 +17,61 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const payment_entity_1 = require("../database/entities/payment.entity");
+const user_entity_1 = require("../database/entities/user.entity");
 const uuid_1 = require("uuid");
 let PaymentsService = class PaymentsService {
-    constructor(paymentRepository) {
+    constructor(paymentRepository, userRepository) {
         this.paymentRepository = paymentRepository;
+        this.userRepository = userRepository;
     }
     async create(createPaymentDto) {
         const payment = this.paymentRepository.create({
             id: (0, uuid_1.v4)(),
             ...createPaymentDto,
         });
+        return this.paymentRepository.save(payment);
+    }
+    async uploadReceipt(userId, receiptUrl, body) {
+        const payment = this.paymentRepository.create({
+            id: (0, uuid_1.v4)(),
+            userId,
+            amount: body?.amount ? Number(body.amount) : 0,
+            status: 'pending',
+            approvalStatus: 'pending',
+            receiptUrl,
+            method: body?.note || '',
+            month: body?.month,
+            year: body?.year,
+        });
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+        if (user) {
+            user.paymentStatus = 'pending_verification';
+            await this.userRepository.save(user);
+        }
+        return this.paymentRepository.save(payment);
+    }
+    async approvePayment(id) {
+        const payment = await this.findById(id);
+        payment.approvalStatus = 'approved';
+        payment.status = 'completed';
+        const user = await this.userRepository.findOne({ where: { id: payment.userId } });
+        if (user) {
+            user.paymentStatus = 'paid';
+            user.dashboardAccess = true;
+            await this.userRepository.save(user);
+        }
+        return this.paymentRepository.save(payment);
+    }
+    async rejectPayment(id) {
+        const payment = await this.findById(id);
+        payment.approvalStatus = 'rejected';
+        payment.status = 'failed';
+        const user = await this.userRepository.findOne({ where: { id: payment.userId } });
+        if (user) {
+            user.paymentStatus = 'rejected';
+            user.dashboardAccess = false;
+            await this.userRepository.save(user);
+        }
         return this.paymentRepository.save(payment);
     }
     async findByUser(userId) {
@@ -38,12 +83,14 @@ let PaymentsService = class PaymentsService {
     async findAll() {
         return this.paymentRepository.find({
             order: { createdAt: 'DESC' },
+            relations: ['user'],
         });
     }
     async findPendingReceipts() {
         const pending = await this.paymentRepository.find({
             where: { approvalStatus: 'pending' },
             order: { createdAt: 'DESC' },
+            relations: ['user'],
         });
         return {
             payments: pending.filter((payment) => Boolean(payment.receiptUrl)),
@@ -71,6 +118,8 @@ exports.PaymentsService = PaymentsService;
 exports.PaymentsService = PaymentsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(payment_entity_1.Payment)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __param(1, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository])
 ], PaymentsService);
 //# sourceMappingURL=payments.service.js.map

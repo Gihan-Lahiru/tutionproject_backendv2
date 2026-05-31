@@ -15,6 +15,9 @@ export declare class User {
     emailVerified: boolean;
     approvalStatus: string;
     status: string;
+    paymentStatus: string;
+    paymentDueDate?: Date;
+    dashboardAccess: boolean;
     currentSessionId?: string;
     createdAt: Date;
     updatedAt: Date;

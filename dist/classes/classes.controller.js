@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClassesController = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const dashboard_access_guard_1 = require("../common/guards/dashboard-access.guard");
 const classes_service_1 = require("./classes.service");
 const create_class_dto_1 = require("./dto/create-class.dto");
 const update_class_dto_1 = require("./dto/update-class.dto");
@@ -101,7 +102,7 @@ __decorate([
 ], ClassesController.prototype, "enrollStudent", null);
 exports.ClassesController = ClassesController = __decorate([
     (0, common_1.Controller)('api/classes'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, dashboard_access_guard_1.DashboardAccessGuard),
     __metadata("design:paramtypes", [classes_service_1.ClassesService])
 ], ClassesController);
 //# sourceMappingURL=classes.controller.js.map

@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.StatsController = void 0;
 const common_1 = require("@nestjs/common");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
+const dashboard_access_guard_1 = require("../common/guards/dashboard-access.guard");
 const stats_service_1 = require("./stats.service");
 let StatsController = class StatsController {
     constructor(statsService) {
@@ -108,7 +109,7 @@ __decorate([
 ], StatsController.prototype, "getStudentActivity", null);
 exports.StatsController = StatsController = __decorate([
     (0, common_1.Controller)('api/stats'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, dashboard_access_guard_1.DashboardAccessGuard),
     __metadata("design:paramtypes", [stats_service_1.StatsService])
 ], StatsController);
 //# sourceMappingURL=stats.controller.js.map

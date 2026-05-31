@@ -12,13 +12,14 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { DashboardAccessGuard } from '../common/guards/dashboard-access.guard';
 import { AssignmentsService } from './assignments.service';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { SubmitAssignmentDto } from './dto/submit-assignment.dto';
 import { PdfWatermarkService } from '../common/services/pdf-watermark.service';
 
 @Controller('api/assignments')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, DashboardAccessGuard)
 export class AssignmentsController {
   constructor(
     private assignmentsService: AssignmentsService,

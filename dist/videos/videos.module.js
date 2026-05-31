@@ -15,12 +15,13 @@ const video_entity_1 = require("../database/entities/video.entity");
 const class_entity_1 = require("../database/entities/class.entity");
 const notification_entity_1 = require("../database/entities/notification.entity");
 const user_entity_1 = require("../database/entities/user.entity");
+const users_module_1 = require("../users/users.module");
 let VideosModule = class VideosModule {
 };
 exports.VideosModule = VideosModule;
 exports.VideosModule = VideosModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([video_entity_1.Video, class_entity_1.Class, notification_entity_1.Notification, user_entity_1.User])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([video_entity_1.Video, class_entity_1.Class, notification_entity_1.Notification, user_entity_1.User]), users_module_1.UsersModule],
         controllers: [videos_controller_1.VideosController],
         providers: [videos_service_1.VideosService],
         exports: [videos_service_1.VideosService],

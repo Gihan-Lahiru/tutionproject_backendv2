@@ -55,6 +55,27 @@ let UsersService = class UsersService {
     constructor(userRepository) {
         this.userRepository = userRepository;
     }
+    async evaluateDashboardAccess(user) {
+        if (!user)
+            return user;
+        let newAccess = true;
+        if (user.role === 'student' && user.createdAt) {
+            const gracePeriodDays = 14;
+            const msPerDay = 1000 * 60 * 60 * 24;
+            const daysSinceRegistration = (Date.now() - user.createdAt.getTime()) / msPerDay;
+            if (daysSinceRegistration <= gracePeriodDays) {
+                newAccess = true;
+            }
+            else {
+                newAccess = user.paymentStatus === 'paid';
+            }
+        }
+        if (user.dashboardAccess !== newAccess) {
+            user.dashboardAccess = newAccess;
+            await this.userRepository.save(user);
+        }
+        return user;
+    }
     async findAll() {
         return this.userRepository.find();
     }
@@ -63,10 +84,11 @@ let UsersService = class UsersService {
         if (!user) {
             throw new common_1.NotFoundException('User not found');
         }
-        return user;
+        return this.evaluateDashboardAccess(user);
     }
     async findByEmail(email) {
-        return this.userRepository.findOne({ where: { email } });
+        const user = await this.userRepository.findOne({ where: { email } });
+        return user ? this.evaluateDashboardAccess(user) : null;
     }
     async create(userData) {
         const password = userData.password || '12345678';

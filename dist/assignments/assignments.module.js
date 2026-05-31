@@ -16,6 +16,7 @@ const submission_entity_1 = require("../database/entities/submission.entity");
 const class_entity_1 = require("../database/entities/class.entity");
 const notification_entity_1 = require("../database/entities/notification.entity");
 const user_entity_1 = require("../database/entities/user.entity");
+const users_module_1 = require("../users/users.module");
 const pdf_watermark_module_1 = require("../common/services/pdf-watermark.module");
 let AssignmentsModule = class AssignmentsModule {
 };
@@ -25,6 +26,7 @@ exports.AssignmentsModule = AssignmentsModule = __decorate([
         imports: [
             typeorm_1.TypeOrmModule.forFeature([assignment_entity_1.Assignment, submission_entity_1.Submission, class_entity_1.Class, notification_entity_1.Notification, user_entity_1.User]),
             pdf_watermark_module_1.PdfWatermarkModule,
+            users_module_1.UsersModule,
         ],
         controllers: [assignments_controller_1.AssignmentsController],
         providers: [assignments_service_1.AssignmentsService],

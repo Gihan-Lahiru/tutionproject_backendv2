@@ -8,9 +8,10 @@ import { Class } from '../database/entities/class.entity';
 import { User } from '../database/entities/user.entity';
 import { UploadService } from '../common/services/upload.service';
 import { PdfWatermarkModule } from '../common/services/pdf-watermark.module';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Note, Notification, Class, User]), PdfWatermarkModule],
+  imports: [TypeOrmModule.forFeature([Note, Notification, Class, User]), PdfWatermarkModule, UsersModule],
   controllers: [NotesController],
   providers: [NotesService, UploadService],
 })

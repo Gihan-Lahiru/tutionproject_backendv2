@@ -7,6 +7,7 @@ import { Submission } from '../database/entities/submission.entity';
 import { Class } from '../database/entities/class.entity';
 import { Notification } from '../database/entities/notification.entity';
 import { User } from '../database/entities/user.entity';
+import { UsersModule } from '../users/users.module';
 
 import { PdfWatermarkModule } from '../common/services/pdf-watermark.module';
 
@@ -14,6 +15,7 @@ import { PdfWatermarkModule } from '../common/services/pdf-watermark.module';
   imports: [
     TypeOrmModule.forFeature([Assignment, Submission, Class, Notification, User]),
     PdfWatermarkModule,
+    UsersModule,
   ],
   controllers: [AssignmentsController],
   providers: [AssignmentsService],

@@ -53,6 +53,15 @@ export class User {
   @Column('text', { default: 'active' })
   status: string; // active, inactive, suspended
 
+  @Column('text', { default: 'unpaid' })
+  paymentStatus: string; // paid, unpaid, pending_verification, rejected
+
+  @Column('datetime', { nullable: true })
+  paymentDueDate?: Date;
+
+  @Column('boolean', { default: true })
+  dashboardAccess: boolean;
+
   @Column('text', { nullable: true })
   currentSessionId?: string;
 

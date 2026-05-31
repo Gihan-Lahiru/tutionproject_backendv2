@@ -1,10 +1,11 @@
 import { Controller, Get, Param, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { DashboardAccessGuard } from '../common/guards/dashboard-access.guard';
 import { StatsService } from './stats.service';
 import { Request } from 'express';
 
 @Controller('api/stats')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, DashboardAccessGuard)
 export class StatsController {
   constructor(private statsService: StatsService) {}
 

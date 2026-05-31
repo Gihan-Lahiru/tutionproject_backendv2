@@ -9,9 +9,10 @@ import { Paper } from '../database/entities/paper.entity';
 import { Assignment } from '../database/entities/assignment.entity';
 import { User } from '../database/entities/user.entity';
 import { Announcement } from '../database/entities/announcement.entity';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Class, Payment, Video, Paper, User, Announcement, Assignment])],
+  imports: [TypeOrmModule.forFeature([Class, Payment, Video, Paper, User, Announcement, Assignment]), UsersModule],
   controllers: [StatsController],
   providers: [StatsService],
   exports: [StatsService],

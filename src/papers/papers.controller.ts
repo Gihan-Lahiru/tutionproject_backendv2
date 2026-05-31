@@ -15,12 +15,13 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { DashboardAccessGuard } from '../common/guards/dashboard-access.guard';
 import { PapersService } from './papers.service';
 import { PdfWatermarkService } from '../common/services/pdf-watermark.service';
 import { Response } from 'express';
 
 @Controller('api/papers')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, DashboardAccessGuard)
 export class PapersController {
   constructor(
     private papersService: PapersService,

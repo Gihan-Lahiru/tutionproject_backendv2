@@ -11,11 +11,12 @@ import {
   Req,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { DashboardAccessGuard } from '../common/guards/dashboard-access.guard';
 import { VideosService } from './videos.service';
 import { Request } from 'express';
 
 @Controller('api/videos')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, DashboardAccessGuard)
 export class VideosController {
   constructor(private videosService: VideosService) {}
 

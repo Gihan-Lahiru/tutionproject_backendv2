@@ -15,6 +15,7 @@ import { PapersModule } from './papers/papers.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { StatsModule } from './stats/stats.module';
 import { AdminModule } from './admin/admin.module';
+import { MessagesModule } from './messages/messages.module';
 import { typeOrmConfig } from './config/database.config';
 
 @Module({
@@ -40,6 +41,7 @@ import { typeOrmConfig } from './config/database.config';
     NotificationsModule,
     StatsModule,
     AdminModule,
+    MessagesModule,
   ],
   controllers: [],
   providers: [],

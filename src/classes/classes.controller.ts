@@ -12,12 +12,13 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { DashboardAccessGuard } from '../common/guards/dashboard-access.guard';
 import { ClassesService } from './classes.service';
 import { CreateClassDto } from './dto/create-class.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
 
 @Controller('api/classes')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, DashboardAccessGuard)
 export class ClassesController {
   constructor(private classesService: ClassesService) {}
 

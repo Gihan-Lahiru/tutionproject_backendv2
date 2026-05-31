@@ -11,6 +11,7 @@ const payment_entity_1 = require("../database/entities/payment.entity");
 const paper_entity_1 = require("../database/entities/paper.entity");
 const notification_entity_1 = require("../database/entities/notification.entity");
 const announcement_entity_1 = require("../database/entities/announcement.entity");
+const message_entity_1 = require("../database/entities/message.entity");
 const entities = [
     user_entity_1.User,
     class_entity_1.Class,
@@ -22,6 +23,7 @@ const entities = [
     paper_entity_1.Paper,
     notification_entity_1.Notification,
     announcement_entity_1.Announcement,
+    message_entity_1.Message,
 ];
 exports.typeOrmConfig = process.env.NODE_ENV === 'production'
     ? {

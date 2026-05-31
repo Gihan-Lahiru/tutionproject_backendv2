@@ -13,12 +13,13 @@ const classes_controller_1 = require("./classes.controller");
 const classes_service_1 = require("./classes.service");
 const class_entity_1 = require("../database/entities/class.entity");
 const user_entity_1 = require("../database/entities/user.entity");
+const users_module_1 = require("../users/users.module");
 let ClassesModule = class ClassesModule {
 };
 exports.ClassesModule = ClassesModule;
 exports.ClassesModule = ClassesModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([class_entity_1.Class, user_entity_1.User])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([class_entity_1.Class, user_entity_1.User]), users_module_1.UsersModule],
         controllers: [classes_controller_1.ClassesController],
         providers: [classes_service_1.ClassesService],
         exports: [classes_service_1.ClassesService],

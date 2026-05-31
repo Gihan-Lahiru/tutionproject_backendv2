@@ -9,6 +9,7 @@ import { Payment } from '../database/entities/payment.entity';
 import { Paper } from '../database/entities/paper.entity';
 import { Notification } from '../database/entities/notification.entity';
 import { Announcement } from '../database/entities/announcement.entity';
+import { Message } from '../database/entities/message.entity';
 
 const entities = [
   User,
@@ -21,6 +22,7 @@ const entities = [
   Paper,
   Notification,
   Announcement,
+  Message,
 ];
 
 export const typeOrmConfig: TypeOrmModuleOptions =

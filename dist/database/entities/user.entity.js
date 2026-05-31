@@ -73,6 +73,18 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "status", void 0);
 __decorate([
+    (0, typeorm_1.Column)('text', { default: 'unpaid' }),
+    __metadata("design:type", String)
+], User.prototype, "paymentStatus", void 0);
+__decorate([
+    (0, typeorm_1.Column)('datetime', { nullable: true }),
+    __metadata("design:type", Date)
+], User.prototype, "paymentDueDate", void 0);
+__decorate([
+    (0, typeorm_1.Column)('boolean', { default: true }),
+    __metadata("design:type", Boolean)
+], User.prototype, "dashboardAccess", void 0);
+__decorate([
     (0, typeorm_1.Column)('text', { nullable: true }),
     __metadata("design:type", String)
 ], User.prototype, "currentSessionId", void 0);

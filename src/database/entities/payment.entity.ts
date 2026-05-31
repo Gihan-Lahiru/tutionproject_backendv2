@@ -34,6 +34,12 @@ export class Payment {
   @Column('text', { default: 'pending' })
   approvalStatus: string; // pending, approved, rejected
 
+  @Column('text', { nullable: true })
+  month?: string;
+
+  @Column('text', { nullable: true })
+  year?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

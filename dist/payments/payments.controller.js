@@ -14,11 +14,32 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentsController = void 0;
 const common_1 = require("@nestjs/common");
+const platform_express_1 = require("@nestjs/platform-express");
 const jwt_auth_guard_1 = require("../common/guards/jwt-auth.guard");
 const payments_service_1 = require("./payments.service");
+const multer_1 = require("multer");
+const path_1 = require("path");
+const fs_1 = require("fs");
+const receiptsDir = (0, path_1.join)(process.cwd(), 'uploads', 'receipts');
+if (!(0, fs_1.existsSync)(receiptsDir)) {
+    (0, fs_1.mkdirSync)(receiptsDir, { recursive: true });
+}
 let PaymentsController = class PaymentsController {
     constructor(paymentsService) {
         this.paymentsService = paymentsService;
+    }
+    async uploadReceipt(req, file, body) {
+        if (!file) {
+            throw new common_1.BadRequestException('Receipt file is required');
+        }
+        const receiptUrl = `/uploads/receipts/${file.filename}`;
+        return this.paymentsService.uploadReceipt(req.user.id, receiptUrl, body);
+    }
+    async approvePayment(id) {
+        return this.paymentsService.approvePayment(id);
+    }
+    async rejectPayment(id) {
+        return this.paymentsService.rejectPayment(id);
     }
     async create(createPaymentDto) {
         return this.paymentsService.create(createPaymentDto);
@@ -46,6 +67,42 @@ let PaymentsController = class PaymentsController {
     }
 };
 exports.PaymentsController = PaymentsController;
+__decorate([
+    (0, common_1.Post)('upload-receipt'),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('receipt', {
+        storage: (0, multer_1.diskStorage)({
+            destination: receiptsDir,
+            filename: (_req, file, cb) => {
+                const extension = (0, path_1.extname)(file.originalname).toLowerCase();
+                cb(null, `receipt_${Date.now()}${extension}`);
+            },
+        }),
+        fileFilter: (_req, file, cb) => {
+            const isValid = /^(image\/|application\/pdf)/.test(file.mimetype);
+            cb(isValid ? null : new common_1.BadRequestException('Invalid file type'), isValid);
+        },
+    })),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.UploadedFile)()),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object]),
+    __metadata("design:returntype", Promise)
+], PaymentsController.prototype, "uploadReceipt", null);
+__decorate([
+    (0, common_1.Put)(':id/approve'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PaymentsController.prototype, "approvePayment", null);
+__decorate([
+    (0, common_1.Put)(':id/reject'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], PaymentsController.prototype, "rejectPayment", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),

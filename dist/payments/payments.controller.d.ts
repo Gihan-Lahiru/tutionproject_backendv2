@@ -2,6 +2,14 @@ import { PaymentsService } from './payments.service';
 export declare class PaymentsController {
     private paymentsService;
     constructor(paymentsService: PaymentsService);
+    uploadReceipt(req: any, file: Express.Multer.File, body: {
+        note?: string;
+        amount?: string;
+        month?: string;
+        year?: string;
+    }): Promise<import("../database/entities/payment.entity").Payment>;
+    approvePayment(id: string): Promise<import("../database/entities/payment.entity").Payment>;
+    rejectPayment(id: string): Promise<import("../database/entities/payment.entity").Payment>;
     create(createPaymentDto: any): Promise<import("../database/entities/payment.entity").Payment[]>;
     findByUser(userId: string): Promise<import("../database/entities/payment.entity").Payment[]>;
     getMyPayments(req: any): Promise<import("../database/entities/payment.entity").Payment[]>;

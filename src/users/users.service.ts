@@ -10,6 +10,29 @@ export class UsersService {
     @InjectRepository(User) private userRepository: Repository<User>,
   ) {}
 
+  private async evaluateDashboardAccess(user: User): Promise<User> {
+    if (!user) return user;
+    let newAccess = true;
+
+    if (user.role === 'student' && user.createdAt) {
+      const gracePeriodDays = 14;
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const daysSinceRegistration = (Date.now() - user.createdAt.getTime()) / msPerDay;
+
+      if (daysSinceRegistration <= gracePeriodDays) {
+        newAccess = true;
+      } else {
+        newAccess = user.paymentStatus === 'paid';
+      }
+    }
+
+    if (user.dashboardAccess !== newAccess) {
+      user.dashboardAccess = newAccess;
+      await this.userRepository.save(user);
+    }
+    return user;
+  }
+
   async findAll() {
     return this.userRepository.find();
   }
@@ -19,11 +42,12 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return user;
+    return this.evaluateDashboardAccess(user);
   }
 
   async findByEmail(email: string) {
-    return this.userRepository.findOne({ where: { email } });
+    const user = await this.userRepository.findOne({ where: { email } });
+    return user ? this.evaluateDashboardAccess(user) : null;
   }
 
   async create(userData: any) {

@@ -8,6 +8,8 @@ export declare class Payment {
     method?: string;
     receiptUrl?: string;
     approvalStatus: string;
+    month?: string;
+    year?: string;
     createdAt: Date;
     updatedAt: Date;
     user: User;

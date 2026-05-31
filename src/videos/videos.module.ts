@@ -6,9 +6,10 @@ import { Video } from '../database/entities/video.entity';
 import { Class } from '../database/entities/class.entity';
 import { Notification } from '../database/entities/notification.entity';
 import { User } from '../database/entities/user.entity';
+import { UsersModule } from '../users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Video, Class, Notification, User])],
+  imports: [TypeOrmModule.forFeature([Video, Class, Notification, User]), UsersModule],
   controllers: [VideosController],
   providers: [VideosService],
   exports: [VideosService],

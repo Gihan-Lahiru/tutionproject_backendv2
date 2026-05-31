@@ -24,6 +24,7 @@ const papers_module_1 = require("./papers/papers.module");
 const notifications_module_1 = require("./notifications/notifications.module");
 const stats_module_1 = require("./stats/stats.module");
 const admin_module_1 = require("./admin/admin.module");
+const messages_module_1 = require("./messages/messages.module");
 const database_config_1 = require("./config/database.config");
 let AppModule = class AppModule {
 };
@@ -52,6 +53,7 @@ exports.AppModule = AppModule = __decorate([
             notifications_module_1.NotificationsModule,
             stats_module_1.StatsModule,
             admin_module_1.AdminModule,
+            messages_module_1.MessagesModule,
         ],
         controllers: [],
         providers: [],
