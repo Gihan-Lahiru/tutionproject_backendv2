@@ -46,7 +46,6 @@
     "reflect-metadata": "latest",
     "rimraf": "latest",
     "rxjs": "latest",
-    "sqlite3": "latest",
     "swagger-ui-express": "latest",
     "typeorm": "latest",
     "uuid": "latest"
