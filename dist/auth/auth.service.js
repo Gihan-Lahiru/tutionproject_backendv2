@@ -167,7 +167,7 @@ let AuthService = class AuthService {
     async findClassByNormalizedGradeTemplate(normalizedGrade, subject, location) {
         const candidates = await this.classRepository.find({
             where: { subject, location },
-            relations: ['students'],
+            relations: { students: true },
         });
         return (candidates.find((entry) => this.normalizeGrade(entry.grade) === normalizedGrade) || null);
     }

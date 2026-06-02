@@ -38,10 +38,10 @@ export const typeOrmConfig: TypeOrmModuleOptions =
         synchronize: false,
         logging: process.env.DB_LOGGING === 'true',
       }
-    : {
+    : ({
         type: 'sqlite',
         database: 'tuition_sir.db',
         entities,
         synchronize: true,
         logging: false,
-      };
+      } as any);

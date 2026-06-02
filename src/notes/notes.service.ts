@@ -45,7 +45,7 @@ export class NotesService {
       let targetStudents: User[] = [];
 
       if (classIdVal) {
-        const fullClass = await this.classRepository.findOne({ where: { id: classIdVal }, relations: ['students'] });
+        const fullClass = await this.classRepository.findOne({ where: { id: classIdVal }, relations: { students: true } });
         const classStudents = fullClass && Array.isArray(fullClass.students) ? fullClass.students : [];
         const classLocation = String(fullClass?.location || '').trim().toLowerCase();
 

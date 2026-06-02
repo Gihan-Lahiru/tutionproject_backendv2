@@ -53,7 +53,7 @@ let PapersService = class PapersService {
             const titleVal = String(saved.title || '').trim() || 'New paper';
             let targetStudents = [];
             if (classId) {
-                const fullClass = await this.classRepository.findOne({ where: { id: classId }, relations: ['students'] });
+                const fullClass = await this.classRepository.findOne({ where: { id: classId }, relations: { students: true } });
                 const classStudents = fullClass && Array.isArray(fullClass.students) ? fullClass.students : [];
                 const classLocation = String(fullClass?.location || '').trim().toLowerCase();
                 targetStudents = classStudents.filter((student) => {

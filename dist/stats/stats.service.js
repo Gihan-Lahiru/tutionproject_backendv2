@@ -180,7 +180,7 @@ let StatsService = class StatsService {
                 take: 5,
             });
             // Filter assignments by teacher's classes
-            const teacherClassIds = (await this.classRepository.find({ where: { teacherId }, select: ['id'] })).map(c => c.id);
+            const teacherClassIds = (await this.classRepository.find({ where: { teacherId }, select: { id: true } })).map(c => c.id);
             recentAssignments.forEach((assignment) => {
                 if (!teacherClassIds.includes(assignment.classId))
                     return;
@@ -212,7 +212,7 @@ let StatsService = class StatsService {
             // Get recent approved payments for this teacher's classes
             const classIds = (await this.classRepository.find({
                 where: { teacherId },
-                select: ['id'],
+                select: { id: true },
             })).map((c) => c.id);
             if (classIds.length > 0) {
                 const recentPayments = await this.paymentRepository.find({
@@ -247,7 +247,7 @@ let StatsService = class StatsService {
         try {
             const classes = await this.classRepository.find({
                 where: { teacherId },
-                relations: ['students'],
+                relations: { students: true },
             });
             const classesWithStudentCount = classes.map((cls) => ({
                 id: cls.id,

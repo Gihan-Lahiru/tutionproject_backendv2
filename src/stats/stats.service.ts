@@ -189,7 +189,7 @@ export class StatsService {
       });
 
       // Filter assignments by teacher's classes
-      const teacherClassIds = (await this.classRepository.find({ where: { teacherId }, select: ['id'] })).map(c => c.id);
+      const teacherClassIds = (await this.classRepository.find({ where: { teacherId }, select: { id: true } })).map(c => c.id);
       recentAssignments.forEach((assignment) => {
         if (!teacherClassIds.includes(assignment.classId)) return;
         activities.push({
@@ -224,7 +224,7 @@ export class StatsService {
       const classIds = (
         await this.classRepository.find({
           where: { teacherId },
-          select: ['id'],
+          select: { id: true },
         })
       ).map((c) => c.id);
 
@@ -264,7 +264,7 @@ export class StatsService {
     try {
       const classes = await this.classRepository.find({
         where: { teacherId },
-        relations: ['students'],
+        relations: { students: true },
       });
 
       const classesWithStudentCount = classes.map((cls) => ({

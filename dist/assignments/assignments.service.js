@@ -39,7 +39,7 @@ let AssignmentsService = class AssignmentsService {
         const saved = await this.assignmentRepository.save(assignment);
         // Create notifications for students in this class (filter by institute/location)
         try {
-            const fullClass = await this.classRepository.findOne({ where: { id: classId }, relations: ['students'] });
+            const fullClass = await this.classRepository.findOne({ where: { id: classId }, relations: { students: true } });
             const classLocation = String(fullClass?.location || '').trim().toLowerCase();
             const classStudents = Array.isArray(fullClass?.students) ? fullClass.students : [];
             const targetStudents = classStudents.filter((student) => {
@@ -68,14 +68,14 @@ let AssignmentsService = class AssignmentsService {
     async findByClass(classId) {
         return this.assignmentRepository.find({
             where: { classId },
-            relations: ['submissions'],
+            relations: { submissions: true },
             order: { createdAt: 'DESC' },
         });
     }
     async findById(id) {
         const assignment = await this.assignmentRepository.findOne({
             where: { id },
-            relations: ['submissions', 'class'],
+            relations: { submissions: true, class: true },
         });
         if (!assignment) {
             throw new common_1.NotFoundException('Assignment not found');
@@ -113,7 +113,7 @@ let AssignmentsService = class AssignmentsService {
     async getSubmissionsByAssignment(assignmentId) {
         return this.submissionRepository.find({
             where: { assignmentId },
-            relations: ['student'],
+            relations: { student: true },
         });
     }
 };

@@ -34,13 +34,13 @@ let ClassesService = class ClassesService {
     }
     async findAll() {
         return this.classRepository.find({
-            relations: ['teacher', 'students'],
+            relations: { teacher: true, students: true },
         });
     }
     async findById(id) {
         const classEntity = await this.classRepository.findOne({
             where: { id },
-            relations: ['teacher', 'students', 'assignments', 'notes'],
+            relations: { teacher: true, students: true, assignments: true, notes: true },
         });
         if (!classEntity) {
             throw new common_1.NotFoundException('Class not found');

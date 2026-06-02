@@ -35,7 +35,7 @@ export class AssignmentsService {
 
     // Create notifications for students in this class (filter by institute/location)
     try {
-      const fullClass = await this.classRepository.findOne({ where: { id: classId }, relations: ['students'] });
+      const fullClass = await this.classRepository.findOne({ where: { id: classId }, relations: { students: true } });
       const classLocation = String(fullClass?.location || '').trim().toLowerCase();
       const classStudents = Array.isArray(fullClass?.students) ? fullClass.students : [];
 
@@ -67,7 +67,7 @@ export class AssignmentsService {
   async findByClass(classId: string) {
     return this.assignmentRepository.find({
       where: { classId },
-      relations: ['submissions'],
+      relations: { submissions: true },
       order: { createdAt: 'DESC' },
     });
   }
@@ -75,7 +75,7 @@ export class AssignmentsService {
   async findById(id: string) {
     const assignment = await this.assignmentRepository.findOne({
       where: { id },
-      relations: ['submissions', 'class'],
+      relations: { submissions: true, class: true },
     });
 
     if (!assignment) {
@@ -128,7 +128,7 @@ export class AssignmentsService {
   async getSubmissionsByAssignment(assignmentId: string) {
     return this.submissionRepository.find({
       where: { assignmentId },
-      relations: ['student'],
+      relations: { student: true },
     });
   }
 }

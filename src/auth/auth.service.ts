@@ -154,7 +154,7 @@ export class AuthService {
   ) {
     const candidates = await this.classRepository.find({
       where: { subject, location },
-      relations: ['students'],
+      relations: { students: true },
     });
 
     return (

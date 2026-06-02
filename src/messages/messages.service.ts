@@ -21,7 +21,7 @@ export class MessagesService {
 
   async findAll() {
     return this.messageRepository.find({
-      relations: ['student'],
+      relations: { student: true },
       order: { createdAt: 'DESC' },
     });
   }
