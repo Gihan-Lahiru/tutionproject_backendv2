@@ -39,7 +39,7 @@ export const typeOrmConfig: TypeOrmModuleOptions =
         logging: process.env.DB_LOGGING === 'true',
       }
     : ({
-        type: 'sqlite',
+        type: 'better-sqlite3',
         database: 'tuition_sir.db',
         entities,
         synchronize: true,
