@@ -7,22 +7,66 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { json, urlencoded } from 'express';
 
-async function bootstrap() {
+export async function createApp() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  // Enable CORS
+  // ========================
+  // CRITICAL: CORS Configuration
+  // ========================
+  // On Vercel serverless, the raw Express instance handles requests directly.
+  // NestJS's enableCors() configures the Express cors middleware on the adapter,
+  // which is correct. But we must ensure:
+  // 1. OPTIONS preflight requests are explicitly handled
+  // 2. All allowed headers/methods are listed
+  // 3. credentials: true requires specific Access-Control-Allow-Origin (not '*')
+  // 4. The origin MUST match exactly what the browser sends (with or without trailing slash, www vs non-www)
   app.enableCors({
-    origin: [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-      'http://localhost:3003',
-      'http://localhost:3004',
-      'http://localhost:3005',
-      'https://www.learnwithmaleesha.com',
-      'https://learnwithmaleesha.com',
-    ],
+    origin: function (origin, callback) {
+      // In production, only allow specific origins
+      const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:3002',
+        'http://localhost:3003',
+        'http://localhost:3004',
+        'http://localhost:3005',
+        'https://www.learnwithmaleesha.com',
+        'https://learnwithmaleesha.com',
+      ];
+      // Allow requests with no origin (like mobile apps, Postman, curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        // Log rejected origins for debugging
+        console.warn(`[CORS] Blocked origin: ${origin}`);
+        callback(new Error(`Origin ${origin} not allowed by CORS`));
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'X-Forwarded-For',
+    ],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  });
+
+  // ========================
+  // IMPORTANT: Global OPTIONS handler for preflight requests
+  // While enableCors() handles most OPTIONS via the cors middleware,
+  // on Vercel serverless, we add an explicit global OPTIONS route
+  // as a safety net to ensure preflight requests never fall through.
+  // ========================
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.options('*', (req, res) => {
+    res.status(204).send('');
   });
 
   // Allow moderately sized JSON bodies for thumbnail payloads
@@ -57,11 +101,9 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  const port = process.env.PORT || 5000;
-  // Development-only debug route: create a notification directly
+  // Development-only debug route
   if (process.env.NODE_ENV !== 'production') {
     try {
-      const expressApp = app.getHttpAdapter().getInstance();
       const { NotificationsService } = await import('./notifications/notifications.service');
       let notificationsService: any = null;
       try {
@@ -86,9 +128,46 @@ async function bootstrap() {
     }
   }
 
+  await app.init();
+  return app;
+}
+
+// ========================
+// VERCEL SERVERLESS: Bootstrap wrapper for serverless
+// Vercel calls this exported function for each request.
+// On Vercel, do NOT call app.listen() - instead,
+// Vercel provides the HTTP context via the handler export.
+// ========================
+let cachedApp: NestExpressApplication | null = null;
+
+async function getApp() {
+  if (!cachedApp) {
+    cachedApp = await createApp();
+  }
+  return cachedApp;
+}
+
+// Export for Vercel serverless function
+// Vercel's @vercel/node runtime can handle Express apps
+export default async function handler(req: any, res: any) {
+  const app = await getApp();
+  const expressInstance = app.getHttpAdapter().getInstance();
+  return expressInstance(req, res);
+}
+
+// Local development: start the server
+async function bootstrap() {
+  const app = await createApp();
+  const port = process.env.PORT || 5000;
   await app.listen(port);
   console.log(`🚀 Server running on http://localhost:${port}`);
   console.log(`📚 Swagger docs available at http://localhost:${port}/docs`);
 }
 
-bootstrap();
+// Only bootstrap if NOT in Vercel serverless environment
+if (!process.env.VERCEL) {
+  bootstrap().catch((err) => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
+}
