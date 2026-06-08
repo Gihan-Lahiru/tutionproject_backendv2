@@ -26,22 +26,15 @@ const entities = [
 ];
 
 export const typeOrmConfig: TypeOrmModuleOptions =
-  process.env.NODE_ENV === 'production'
-    ? {
+  {
         type: 'mysql',
         host: process.env.DB_HOST || 'localhost',
         port: parseInt(process.env.DB_PORT || '3306'),
-        username: process.env.DB_USER || 'root',
-        password: process.env.DB_PASSWORD || '',
-        database: process.env.DB_NAME || 'tuition_sir',
+        username: process.env.DB_USER || 'u579059016_maleesha123',
+        password: process.env.DB_PASSWORD || 'maleeSHA@#$%Gh1',
+        database: process.env.DB_NAME || 'u579059016_tution',
         entities,
         synchronize: false,
         logging: process.env.DB_LOGGING === 'true',
       }
-    : ({
-        type: 'better-sqlite3',
-        database: 'tuition_sir.db',
-        entities,
-        synchronize: true,
-        logging: false,
-      } as any);
+    ;

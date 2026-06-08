@@ -16,7 +16,6 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { StatsModule } from './stats/stats.module';
 import { AdminModule } from './admin/admin.module';
 import { MessagesModule } from './messages/messages.module';
-import { typeOrmConfig } from './config/database.config';
 
 @Module({
   imports: [
@@ -28,7 +27,22 @@ import { typeOrmConfig } from './config/database.config';
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
     }),
-    TypeOrmModule.forRoot(typeOrmConfig),
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: () => ({
+        type: 'mysql',
+        host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT || '3306'),
+        username: process.env.DB_USER || 'root',
+        password: process.env.DB_PASSWORD || '',
+        database: process.env.DB_NAME || 'mydb',
+        entities: [
+          join(__dirname, '..', 'database', 'entities', '*.entity.{ts,js}'),
+        ],
+        synchronize: false,
+        logging: process.env.DB_LOGGING === 'true',
+      }),
+    }),
     AuthModule,
     AnnouncementsModule,
     ClassesModule,
