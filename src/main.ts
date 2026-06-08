@@ -19,6 +19,8 @@ async function bootstrap() {
       'http://localhost:3003',
       'http://localhost:3004',
       'http://localhost:3005',
+      'https://www.learnwithmaleesha.com',
+      'https://learnwithmaleesha.com',
     ],
     credentials: true,
   });
