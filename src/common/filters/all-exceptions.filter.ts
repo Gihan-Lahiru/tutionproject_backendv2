@@ -16,6 +16,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
+
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
     let message = 'Internal server error';
 
@@ -40,16 +41,37 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = exception;
     }
 
-    this.logger.error(`[${new Date().toISOString()}] ${message}`, exception);
+    this.logger.error(`[${new Date().toISOString()}] ${message}`, exception instanceof Error ? exception.stack : exception);
     // Log request info for debugging unauthorized errors
     try {
       const req = request as any;
       if (req) {
-        this.logger.error(`[Request] ${req.method} ${req.url} Authorization: ${req.headers?.authorization}`);
+        this.logger.error(`[Request] ${req.method} ${req.url} Origin: ${req.headers?.origin}`);
       }
     } catch (e) {
       // ignore
     }
+
+    // ================================================================
+    // IMPORTANT: Preserve CORS headers before sending the error
+    // response. The cors middleware (from enableCors()) sets these
+    // on the response, but response.status().json() replaces all
+    // headers. We must set them on the response BEFORE json().
+    //
+    // Without this, the error response will NOT include
+    // Access-Control-Allow-Origin, causing the browser to reject
+    // the response with a CORS error.
+    // ================================================================
+    const origin = response.getHeader('Access-Control-Allow-Origin');
+    const credentials = response.getHeader('Access-Control-Allow-Credentials');
+    const methods = response.getHeader('Access-Control-Allow-Methods');
+    const allowHeaders = response.getHeader('Access-Control-Allow-Headers');
+
+    // Set CORS headers FIRST, before sending response body
+    if (origin) response.setHeader('Access-Control-Allow-Origin', origin);
+    if (credentials) response.setHeader('Access-Control-Allow-Credentials', credentials);
+    if (methods) response.setHeader('Access-Control-Allow-Methods', methods);
+    if (allowHeaders) response.setHeader('Access-Control-Allow-Headers', allowHeaders);
 
     response.status(status).json({
       statusCode: status,
