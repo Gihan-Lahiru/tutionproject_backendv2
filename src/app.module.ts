@@ -64,6 +64,7 @@ import { Message } from './database/entities/message.entity';
           Message,
         ],
         synchronize: false,
+        autoLoadEntities: true,
         logging: process.env.DB_LOGGING === 'true',
       }),
     }),
