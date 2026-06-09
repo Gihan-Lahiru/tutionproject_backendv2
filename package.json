@@ -31,6 +31,7 @@
     "@nestjs/serve-static": "^5.0.5",
     "@nestjs/swagger": "latest",
     "@nestjs/typeorm": "latest",
+    "basic-ftp": "^6.0.1",
     "bcryptjs": "latest",
     "better-sqlite3": "^12.10.0",
     "class-transformer": "latest",
