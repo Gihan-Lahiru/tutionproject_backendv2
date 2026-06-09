@@ -20,13 +20,7 @@ import { memoryStorage } from 'multer';
 import { HostingerStorageService } from '../nestjs-hostinger-storage/hostinger-storage.service';
 import { UsersService } from './users.service';
 
-const profilePicturesDir = join(process.cwd(), 'uploads', 'profile-pictures');
 
-const ensureProfilePicturesDir = () => {
-  if (!existsSync(profilePicturesDir)) {
-    mkdirSync(profilePicturesDir, { recursive: true });
-  }
-};
 
 @Controller('api/users')
 @UseGuards(JwtAuthGuard)

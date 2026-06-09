@@ -13,6 +13,18 @@ import { ApiConsumes, ApiBody, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { HostingerStorageService } from './hostinger-storage.service';
 import { FileUploadDto } from './dto/upload.dto';
 
+const createDocumentValidator = () => {
+  return new ParseFilePipe({
+    validators: [
+      new MaxFileSizeValidator({ maxSize: 20 * 1024 * 1024 }), // 20MB
+      new FileTypeValidator({
+        // Accepts common document formats
+        fileType: /.(pdf|doc|docx|ppt|pptx|xls|xlsx)$/i,
+      }),
+    ],
+  });
+};
+
 @ApiTags('Hostinger Uploads')
 @Controller('upload')
 export class UploadController {
@@ -49,7 +61,7 @@ export class UploadController {
   })
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async uploadNote(
-    @UploadedFile(this.createDocumentValidator())
+    @UploadedFile(createDocumentValidator())
     file: Express.Multer.File,
   ) {
     return this.storageService.uploadFile(file.buffer, file.originalname, 'notes');
@@ -64,7 +76,7 @@ export class UploadController {
   })
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async uploadAssignment(
-    @UploadedFile(this.createDocumentValidator())
+    @UploadedFile(createDocumentValidator())
     file: Express.Multer.File,
   ) {
     return this.storageService.uploadFile(file.buffer, file.originalname, 'assignments');
@@ -79,7 +91,7 @@ export class UploadController {
   })
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async uploadPaper(
-    @UploadedFile(this.createDocumentValidator())
+    @UploadedFile(createDocumentValidator())
     file: Express.Multer.File,
   ) {
     return this.storageService.uploadFile(file.buffer, file.originalname, 'papers');
@@ -94,24 +106,10 @@ export class UploadController {
   })
   @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async uploadResource(
-    @UploadedFile(this.createDocumentValidator())
+    @UploadedFile(createDocumentValidator())
     file: Express.Multer.File,
   ) {
     return this.storageService.uploadFile(file.buffer, file.originalname, 'resources');
   }
 
-  /**
-   * Helper method to create standard document validators
-   */
-  private createDocumentValidator() {
-    return new ParseFilePipe({
-      validators: [
-        new MaxFileSizeValidator({ maxSize: 20 * 1024 * 1024 }), // 20MB
-        new FileTypeValidator({
-          // Accepts common document formats
-          fileType: /.(pdf|doc|docx|ppt|pptx|xls|xlsx)$/i,
-        }),
-      ],
-    });
-  }
 }
