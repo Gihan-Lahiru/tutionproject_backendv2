@@ -17,7 +17,6 @@ import { StatsModule } from './stats/stats.module';
 import { AdminModule } from './admin/admin.module';
 import { MessagesModule } from './messages/messages.module';
 import { PingModule } from './ping/ping.module';
-import { HostingerStorageModule } from './nestjs-hostinger-storage/hostinger-storage.module';
 
 // Entity imports
 import { User } from './database/entities/user.entity';
@@ -31,7 +30,6 @@ import { Paper } from './database/entities/paper.entity';
 import { Notification } from './database/entities/notification.entity';
 import { Announcement } from './database/entities/announcement.entity';
 import { Message } from './database/entities/message.entity';
-import { FileMetadata } from './nestjs-hostinger-storage/entities/file-metadata.entity';
 
 @Module({
   imports: [
@@ -64,7 +62,6 @@ import { FileMetadata } from './nestjs-hostinger-storage/entities/file-metadata.
           Notification,
           Announcement,
           Message,
-          FileMetadata,
         ],
         synchronize: false,
         autoLoadEntities: true,
@@ -85,7 +82,6 @@ import { FileMetadata } from './nestjs-hostinger-storage/entities/file-metadata.
     AdminModule,
     MessagesModule,
     PingModule,
-    HostingerStorageModule,
   ],
   controllers: [],
   providers: [],

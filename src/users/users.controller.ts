@@ -16,19 +16,23 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
-import { HostingerStorageService } from '../nestjs-hostinger-storage/hostinger-storage.service';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { UsersService } from './users.service';
 
+const profilePicturesDir = join(process.cwd(), 'uploads', 'profile-pictures');
 
+const ensureProfilePicturesDir = () => {
+  if (!existsSync(profilePicturesDir)) {
+    mkdirSync(profilePicturesDir, { recursive: true });
+  }
+};
 
 @Controller('api/users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(
-    private usersService: UsersService,
-    private hostingerStorageService: HostingerStorageService,
-  ) {}
+  constructor(private usersService: UsersService) {}
 
   private sanitizeUser(user: any) {
     if (!user) return user;
@@ -84,7 +88,17 @@ export class UsersController {
   @Post('profile-picture')
   @UseInterceptors(
     FileInterceptor('profilePicture', {
-      storage: memoryStorage(),
+      storage: diskStorage({
+        destination: (_req, _file, cb) => {
+          ensureProfilePicturesDir();
+          cb(null, profilePicturesDir);
+        },
+        filename: (_req, file, cb) => {
+          const extension = extname(file.originalname || '').toLowerCase() || '.jpg';
+          const uniqueName = `profile_${Date.now()}_${Math.round(Math.random() * 1e9)}${extension}`;
+          cb(null, uniqueName);
+        },
+      }),
       limits: { fileSize: 5 * 1024 * 1024 },
       fileFilter: (_req, file, cb) => {
         const isImage = file.mimetype?.startsWith('image/');
@@ -97,19 +111,14 @@ export class UsersController {
       throw new BadRequestException('Profile picture file is required');
     }
 
-    const { publicUrl } = await this.hostingerStorageService.uploadFile(
-      file.buffer,
-      file.originalname,
-      'profile-pictures',
-    );
-
+    const profilePicturePath = `/uploads/profile-pictures/${file.filename}`;
     const user = await this.usersService.update(req.user.id, {
-      profilePicture: publicUrl,
+      profilePicture: profilePicturePath,
     });
 
     return {
       message: 'Profile picture updated successfully',
-      profile_picture: publicUrl,
+      profile_picture: profilePicturePath,
       user: this.sanitizeUser(user),
     };
   }
