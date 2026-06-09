@@ -18,6 +18,19 @@ import { AdminModule } from './admin/admin.module';
 import { MessagesModule } from './messages/messages.module';
 import { PingModule } from './ping/ping.module';
 
+// Entity imports
+import { User } from './database/entities/user.entity';
+import { Class } from './database/entities/class.entity';
+import { Assignment } from './database/entities/assignment.entity';
+import { Submission } from './database/entities/submission.entity';
+import { Note } from './database/entities/note.entity';
+import { Video } from './database/entities/video.entity';
+import { Payment } from './database/entities/payment.entity';
+import { Paper } from './database/entities/paper.entity';
+import { Notification } from './database/entities/notification.entity';
+import { Announcement } from './database/entities/announcement.entity';
+import { Message } from './database/entities/message.entity';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -38,7 +51,17 @@ import { PingModule } from './ping/ping.module';
         password: process.env.DB_PASSWORD || '',
         database: process.env.DB_NAME || 'mydb',
         entities: [
-          join(__dirname, '..', 'database', 'entities', '*.entity.{ts,js}'),
+          User,
+          Class,
+          Assignment,
+          Submission,
+          Note,
+          Video,
+          Payment,
+          Paper,
+          Notification,
+          Announcement,
+          Message,
         ],
         synchronize: false,
         logging: process.env.DB_LOGGING === 'true',
