@@ -41,6 +41,7 @@ import { PingModule } from './ping/ping.module';
           join(__dirname, '..', 'database', 'entities', '*.entity.{ts,js}'),
         ],
         synchronize: false,
+        autoLoadEntities: true,
         logging: process.env.DB_LOGGING === 'true',
       }),
     }),
