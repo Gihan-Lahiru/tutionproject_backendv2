@@ -16,6 +16,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { StatsModule } from './stats/stats.module';
 import { AdminModule } from './admin/admin.module';
 import { MessagesModule } from './messages/messages.module';
+import { PingModule } from './ping/ping.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { MessagesModule } from './messages/messages.module';
     StatsModule,
     AdminModule,
     MessagesModule,
+    PingModule,
   ],
   controllers: [],
   providers: [],

@@ -206,3 +206,10 @@ export = async function handler(req: any, res: any) {
     }
   }
 };
+
+if (!process.env.VERCEL) {
+  bootstrap().catch((err: any) => {
+    console.error('[Bootstrap] Fatal startup error:', err?.message || err, err?.stack);
+    process.exit(1);
+  });
+}
