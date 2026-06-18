@@ -43,25 +43,34 @@ export class PapersService {
       const classIdVal = String(saved.classId || '').trim();
       let subject = '';
       let institute = '';
+      let fullClass = null;
 
       if (classIdVal) {
-        const fullClass = await this.classRepository.findOne({ where: { id: classIdVal } });
+        fullClass = await this.classRepository.findOne({ where: { id: classIdVal } });
         if (fullClass) {
           subject = fullClass.subject || '';
           institute = fullClass.location || '';
         }
       }
 
-      this.eventEmitter.emit('paper_uploaded', {
-        type: 'paper',
+      const fileType = (saved.type || 'paper').toLowerCase() as 'paper' | 'note' | 'assignment';
+      let eventName = 'paper_uploaded';
+      if (fileType === 'note') {
+        eventName = 'note_uploaded';
+      } else if (fileType === 'assignment') {
+        eventName = 'assignment_uploaded';
+      }
+
+      this.eventEmitter.emit(eventName, {
+        type: fileType,
         title: saved.title,
         subject,
         grade: saved.grade,
         institute,
-        teacherId: saved.teacherId,
+        teacherId: saved.teacherId || (fullClass ? fullClass.teacherId : ''),
       });
     } catch (err) {
-      console.warn('Failed to emit paper_uploaded event', err?.message || err);
+      console.warn('Failed to emit file upload event', err?.message || err);
     }
 
     return saved;

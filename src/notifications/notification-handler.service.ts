@@ -52,30 +52,43 @@ export class NotificationHandlerService {
 
   private async processNotification(event: NotificationEvent) {
     try {
-      const gradeStr = String(event.grade).trim();
+      const gradeStr = String(event.grade || '').trim();
       const instituteStr = String(event.institute || '').trim().toLowerCase();
 
-      if (!gradeStr || !instituteStr) {
-        this.logger.warn(`Missing grade (${gradeStr}) or institute (${instituteStr}) in event, skipping notifications.`);
+      if (!gradeStr) {
+        this.logger.warn(`Missing grade in event, skipping notifications.`);
         return;
       }
 
-      // 1. Fetch matching students based on grade + institute matching rules
+      const normalizeGrade = (g: string) => g.toLowerCase().replace('grade', '').trim();
+      const targetGradeNormalized = normalizeGrade(gradeStr);
+
+      // 1. Fetch all students
       const students = await this.userRepository.find({
         where: {
           role: 'student',
-          grade: gradeStr,
         },
       });
 
-      // Filter by institute (case-insensitive and trimmed)
+      // Filter by normalized grade and optional institute matching rules
       const targetStudents = students.filter(student => {
-        const studentInstitute = String(student.institute || '').trim().toLowerCase();
-        return studentInstitute === instituteStr;
+        const studentGrade = normalizeGrade(student.grade || '');
+        if (studentGrade !== targetGradeNormalized) {
+          return false;
+        }
+
+        // If event institute is specified, filter by it.
+        // Otherwise, matching is grade-wide (allow all).
+        if (instituteStr) {
+          const studentInstitute = String(student.institute || '').trim().toLowerCase();
+          return studentInstitute === instituteStr;
+        }
+
+        return true;
       });
 
       if (targetStudents.length === 0) {
-        this.logger.log(`No students found matching grade "${gradeStr}" and institute "${instituteStr}".`);
+        this.logger.log(`No students found matching normalized grade "${targetGradeNormalized}" and institute filter "${instituteStr || 'any'}".`);
         return;
       }
 
