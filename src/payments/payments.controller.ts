@@ -14,30 +14,19 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { PaymentsService } from './payments.service';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
-
-const receiptsDir = join(process.cwd(), 'uploads', 'receipts');
-if (!existsSync(receiptsDir)) {
-  mkdirSync(receiptsDir, { recursive: true });
-}
+import { UploadService } from '../common/services/upload.service';
 
 @Controller('api/payments')
 @UseGuards(JwtAuthGuard)
 export class PaymentsController {
-  constructor(private paymentsService: PaymentsService) {}
+  constructor(
+    private paymentsService: PaymentsService,
+    private uploadService: UploadService,
+  ) {}
 
   @Post('upload-receipt')
   @UseInterceptors(
     FileInterceptor('receipt', {
-      storage: diskStorage({
-        destination: receiptsDir,
-        filename: (_req, file, cb) => {
-          const extension = extname(file.originalname).toLowerCase();
-          cb(null, `receipt_${Date.now()}${extension}`);
-        },
-      }),
       fileFilter: (_req, file, cb) => {
         const isValid = /^(image\/|application\/pdf)/.test(file.mimetype);
         cb(isValid ? null : new BadRequestException('Invalid file type'), isValid);
@@ -46,13 +35,14 @@ export class PaymentsController {
   )
   async uploadReceipt(
     @Req() req,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: any,
     @Body() body: { note?: string; amount?: string; month?: string; year?: string },
   ) {
     if (!file) {
       throw new BadRequestException('Receipt file is required');
     }
-    const receiptUrl = `/uploads/receipts/${file.filename}`;
+    const uploadResult = await this.uploadService.uploadFile(file, 'tuition_sir/receipts');
+    const receiptUrl = uploadResult.secure_url;
     return this.paymentsService.uploadReceipt(req.user.id, receiptUrl, body);
   }
 

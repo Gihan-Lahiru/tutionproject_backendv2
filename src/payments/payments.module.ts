@@ -4,11 +4,13 @@ import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { Payment } from '../database/entities/payment.entity';
 import { User } from '../database/entities/user.entity';
+import { UploadService } from '../common/services/upload.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Payment, User])],
   controllers: [PaymentsController],
-  providers: [PaymentsService],
+  providers: [PaymentsService, UploadService],
   exports: [PaymentsService],
 })
 export class PaymentsModule {}
+
