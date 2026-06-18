@@ -65,6 +65,12 @@ export class User {
   @Column('text', { nullable: true })
   currentSessionId?: string;
 
+  @Column('text', { nullable: true })
+  resetPasswordToken?: string;
+
+  @Column('datetime', { nullable: true })
+  resetPasswordExpires?: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 

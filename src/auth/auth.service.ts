@@ -1,17 +1,20 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { MailerService } from '@nestjs-modules/mailer';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { User } from '../database/entities/user.entity';
 import { Class } from '../database/entities/class.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { v4 as uuid } from 'uuid';
 
 @Injectable()
-export class AuthService {
+export class AuthService implements OnModuleInit {
   private readonly defaultGrades = ['6', '7', '8', '9', '10', '11', '12', '13'];
 
   private readonly defaultClassTemplates = [
@@ -254,5 +257,141 @@ export class AuthService {
       console.warn('Failed to send verification email:', error);
       return false;
     }
+  }
+
+  // In-memory rate limiting map
+  private readonly resetRequests = new Map<string, number[]>();
+
+  async onModuleInit() {
+    try {
+      await this.userRepository.query('ALTER TABLE `users` ADD COLUMN `resetPasswordToken` TEXT NULL');
+      console.log('Successfully checked/added resetPasswordToken column to users table.');
+    } catch (e) {
+      // Column already exists or table doesn't support ALTER
+    }
+    try {
+      await this.userRepository.query('ALTER TABLE `users` ADD COLUMN `resetPasswordExpires` DATETIME NULL');
+      console.log('Successfully checked/added resetPasswordExpires column to users table.');
+    } catch (e) {
+      // Column already exists or table doesn't support ALTER
+    }
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto, ip: string) {
+    const email = dto.email.trim().toLowerCase();
+    const rateKey = `${ip}:${email}`;
+    const now = Date.now();
+    const windowMs = 15 * 60 * 1000; // 15 mins
+    const limit = 3; // max 3 requests per 15 minutes
+
+    const timestamps = this.resetRequests.get(rateKey) || [];
+    const relevantTimestamps = timestamps.filter((t) => now - t < windowMs);
+
+    if (relevantTimestamps.length >= limit) {
+      throw new BadRequestException('Too many password reset requests. Please wait 15 minutes before trying again.');
+    }
+
+    relevantTimestamps.push(now);
+    this.resetRequests.set(rateKey, relevantTimestamps);
+
+    const user = await this.userRepository.findOne({ where: { email } });
+    
+    // Generic response message to prevent email enumeration
+    const successResponse = {
+      message: 'If this email is registered in our system, you will receive a password reset code shortly.',
+    };
+
+    if (!user) {
+      return successResponse;
+    }
+
+    // Generate unique secure 6-digit code and expiry time
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordToken = code;
+    user.resetPasswordExpires = new Date(now + 15 * 60 * 1000); // 15 minutes from now
+
+    await this.userRepository.save(user);
+
+    try {
+      await this.mailerService.sendMail({
+        to: user.email,
+        subject: 'Tuition Sir - Password Reset Code',
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; padding: 40px 10px; color: #1f2937;">
+            <div style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+              <div style="background-color: #2563eb; padding: 30px; text-align: center; color: #ffffff;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">Tuition Sir</h1>
+              </div>
+              <div style="padding: 40px 30px; line-height: 1.6;">
+                <p style="font-size: 16px; margin-top: 0; color: #1f2937;">Hello ${user.name || 'User'},</p>
+                <p style="font-size: 15px; color: #4b5563;">We received a request to reset the password for your account. Please use the following 6-digit verification code to complete your password reset:</p>
+                
+                <div style="text-align: center; margin: 35px 0;">
+                  <span style="display: inline-block; background-color: #f3f4f6; border: 1px solid #e5e7eb; color: #2563eb; font-size: 36px; font-weight: 800; letter-spacing: 6px; padding: 12px 30px; border-radius: 8px;">${code}</span>
+                </div>
+                
+                <p style="font-size: 14px; color: #6b7280; background-color: #f9fafb; padding: 15px; border-left: 4px solid #ef4444; border-radius: 4px;">
+                  <strong>Important:</strong> This password reset code is only valid for 15 minutes. For security, please complete your reset promptly.
+                </p>
+                
+                <p style="font-size: 13px; color: #9ca3af; margin-top: 30px; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+                  If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.
+                </p>
+              </div>
+            </div>
+          </div>
+        `,
+      });
+    } catch (error) {
+      console.warn('Failed to send password reset email:', error);
+      // We still return successResponse to avoid leaking email presence
+    }
+
+    return successResponse;
+  }
+
+  async validateResetToken(email: string, code: string) {
+    if (!email || !code) {
+      throw new BadRequestException('Email and code parameters are required.');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { email: email.trim().toLowerCase() },
+    });
+
+    if (!user || user.resetPasswordToken !== code || !user.resetPasswordExpires || user.resetPasswordExpires.getTime() < Date.now()) {
+      throw new BadRequestException('Invalid or expired password reset code.');
+    }
+
+    return { valid: true };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    if (dto.password !== dto.confirmPassword) {
+      throw new BadRequestException('Passwords do not match.');
+    }
+
+    const email = dto.email.trim().toLowerCase();
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
+
+    if (!user || user.resetPasswordToken !== dto.code || !user.resetPasswordExpires || user.resetPasswordExpires.getTime() < Date.now()) {
+      throw new BadRequestException('Invalid or expired password reset code.');
+    }
+
+    // Hash the password using bcrypt
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    
+    // Update credentials and invalidate the token immediately
+    user.password = hashedPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+
+    await this.userRepository.save(user);
+
+    return {
+      message: 'Password has been reset successfully. You can now login with your new credentials.',
+    };
   }
 }
