@@ -26,6 +26,7 @@
     "@nestjs/common": "latest",
     "@nestjs/config": "latest",
     "@nestjs/core": "latest",
+    "@nestjs/event-emitter": "^3.1.0",
     "@nestjs/jwt": "latest",
     "@nestjs/passport": "latest",
     "@nestjs/platform-express": "latest",

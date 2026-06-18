@@ -9,6 +9,7 @@ import { UploadService } from '../common/services/upload.service';
 import { v4 as uuid } from 'uuid';
 import { promises as fs } from 'fs';
 import { join, basename } from 'path';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class PapersService {
@@ -18,6 +19,7 @@ export class PapersService {
     @InjectRepository(Notification) private notificationRepository: Repository<Notification>,
     @InjectRepository(Class) private classRepository: Repository<Class>,
     @InjectRepository(User) private userRepository: Repository<User>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async upload(file: any, title: string, grade?: string, type?: string, topic?: string, classId?: string) {
@@ -36,41 +38,30 @@ export class PapersService {
     });
     const saved = await this.paperRepository.save(paper);
 
-    // create notifications for students in target class or grade
+    // Emit paper_uploaded event
     try {
-      const classId = String(saved.classId || '').trim();
-      const gradeVal = String(saved.grade || '').trim();
-      const titleVal = String(saved.title || '').trim() || 'New paper';
+      const classIdVal = String(saved.classId || '').trim();
+      let subject = '';
+      let institute = '';
 
-      let targetStudents: User[] = [];
-
-      if (classId) {
-        const fullClass = await this.classRepository.findOne({ where: { id: classId }, relations: { students: true } });
-        const classStudents = fullClass && Array.isArray(fullClass.students) ? fullClass.students : [];
-        const classLocation = String(fullClass?.location || '').trim().toLowerCase();
-
-        targetStudents = classStudents.filter((student) => {
-          const studentInstitute = String(student?.institute || '').trim().toLowerCase();
-          if (!classLocation) return true;
-          return studentInstitute === classLocation;
-        });
-      } else if (gradeVal) {
-        targetStudents = await this.userRepository.find({ where: { role: 'student', grade: gradeVal } });
+      if (classIdVal) {
+        const fullClass = await this.classRepository.findOne({ where: { id: classIdVal } });
+        if (fullClass) {
+          subject = fullClass.subject || '';
+          institute = fullClass.location || '';
+        }
       }
 
-      if (targetStudents.length) {
-        const notifications = targetStudents.map((student) => ({
-          id: uuid(),
-          userId: student.id,
-          type: (saved.type || 'paper').toLowerCase(),
-          message: `New ${saved.type || 'Material'}: ${titleVal.length > 100 ? titleVal.slice(0, 97) + '...' : titleVal}`,
-          read: 0,
-        }));
-
-        await this.notificationRepository.save(notifications as any);
-      }
+      this.eventEmitter.emit('paper_uploaded', {
+        type: 'paper',
+        title: saved.title,
+        subject,
+        grade: saved.grade,
+        institute,
+        teacherId: saved.teacherId,
+      });
     } catch (err) {
-      console.warn('Failed to create notifications for paper upload', err?.message || err);
+      console.warn('Failed to emit paper_uploaded event', err?.message || err);
     }
 
     return saved;

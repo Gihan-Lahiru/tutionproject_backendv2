@@ -6,6 +6,7 @@ import { Class } from '../database/entities/class.entity';
 import { Notification } from '../database/entities/notification.entity';
 import { User } from '../database/entities/user.entity';
 import { v4 as uuid } from 'uuid';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class AnnouncementsService {
@@ -14,6 +15,7 @@ export class AnnouncementsService {
     @InjectRepository(Class) private classRepository: Repository<Class>,
     @InjectRepository(Notification) private notificationRepository: Repository<Notification>,
     @InjectRepository(User) private userRepository: Repository<User>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(message: string, classId: string, userId?: string) {
@@ -26,33 +28,20 @@ export class AnnouncementsService {
 
     const saved = await this.announcementRepository.save(announcement);
 
-    // Create notifications only for students enrolled in this class
+    // Emit announcement_created event
     try {
-      const fullClass = await this.classRepository.findOne({ where: { id: classId }, relations: { students: true } });
-      const classStudents = fullClass && Array.isArray(fullClass.students) ? fullClass.students : [];
-      const classLocation = String(fullClass?.location || '').trim().toLowerCase();
-
-      const targetStudents = classStudents.filter((student) => {
-        const studentInstitute = String(student?.institute || '').trim().toLowerCase();
-        if (!classLocation) return true;
-        return studentInstitute === classLocation;
-      });
-
-      if (targetStudents.length) {
-        const notifications = targetStudents.map((student) => ({
-          id: uuid(),
-          userId: student.id,
+      const fullClass = await this.classRepository.findOne({ where: { id: classId } });
+      if (fullClass) {
+        this.eventEmitter.emit('announcement_created', {
           type: 'announcement',
-          message: `New announcement for ${fullClass?.title || fullClass?.name || 'your class'}: ${
-            message.length > 120 ? message.slice(0, 117) + '...' : message
-          }`,
-          read: 0,
-        }));
-
-        await this.notificationRepository.save(notifications as any);
+          title: message,
+          grade: fullClass.grade || '',
+          institute: fullClass.location || '',
+          teacherId: userId || '',
+        });
       }
     } catch (e) {
-      console.warn('Failed to create notifications for announcement', e?.message || e);
+      console.warn('Failed to emit announcement_created event', e?.message || e);
     }
 
     return saved;

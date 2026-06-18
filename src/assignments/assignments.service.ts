@@ -9,6 +9,7 @@ import { User } from '../database/entities/user.entity';
 import { CreateAssignmentDto } from './dto/create-assignment.dto';
 import { SubmitAssignmentDto } from './dto/submit-assignment.dto';
 import { v4 as uuid } from 'uuid';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class AssignmentsService {
@@ -23,6 +24,7 @@ export class AssignmentsService {
     private notificationRepository: Repository<Notification>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   async create(createAssignmentDto: CreateAssignmentDto, classId: string) {
@@ -33,32 +35,21 @@ export class AssignmentsService {
     });
     const saved = await this.assignmentRepository.save(assignment);
 
-    // Create notifications for students in this class (filter by institute/location)
+    // Emit assignment_uploaded event
     try {
-      const fullClass = await this.classRepository.findOne({ where: { id: classId }, relations: { students: true } });
-      const classLocation = String(fullClass?.location || '').trim().toLowerCase();
-      const classStudents = Array.isArray(fullClass?.students) ? fullClass.students : [];
-
-      const targetStudents = classStudents.filter((student) => {
-        const studentInstitute = String(student?.institute || '').trim().toLowerCase();
-        if (!classLocation) return true;
-        return studentInstitute === classLocation;
-      });
-
-      if (targetStudents.length) {
-        const message = `${createAssignmentDto.title || 'New assignment'} posted for ${fullClass?.title || fullClass?.name || 'your class'}`;
-        const notifications = targetStudents.map((student) => ({
-          id: uuid(),
-          userId: student.id,
+      const fullClass = await this.classRepository.findOne({ where: { id: classId } });
+      if (fullClass) {
+        this.eventEmitter.emit('assignment_uploaded', {
           type: 'assignment',
-          message,
-          read: 0,
-        }));
-
-        await this.notificationRepository.save(notifications as any);
+          title: saved.title || '',
+          subject: fullClass.subject || '',
+          grade: fullClass.grade || '',
+          institute: fullClass.location || '',
+          teacherId: fullClass.teacherId || '',
+        });
       }
     } catch (e) {
-      console.warn('Failed to create notifications for assignment', e?.message || e);
+      console.warn('Failed to emit assignment_uploaded event', e?.message || e);
     }
 
     return saved;
