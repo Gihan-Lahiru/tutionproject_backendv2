@@ -88,4 +88,4 @@ import { Message } from './database/entities/message.entity';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }

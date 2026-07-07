@@ -51,32 +51,48 @@ export class StatsService {
 
   async getTeacherStats(teacherId: string) {
     try {
-      // Get total classes for this teacher
-      const totalClasses = await this.classRepository.count({
-        where: { teacherId },
-      });
+      // Run counts and queries concurrently
+      const [
+        totalClasses,
+        totalStudents,
+        totalVideos,
+        monthlyPayments,
+        currentMonthStudents,
+        lastMonthStudents,
+      ] = await Promise.all([
+        this.classRepository.count({ where: { teacherId } }),
+        this.userRepository.count({ where: { role: 'student' } }),
+        this.videoRepository.count({ where: { teacherId } }),
+        this.paymentRepository.find({
+          where: {
+            status: 'completed',
+            approvalStatus: 'approved',
+          },
+        }),
+        this.userRepository.count({
+          where: {
+            role: 'student',
+            createdAt: Between(
+              new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+              new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1)
+            ),
+          },
+        }),
+        this.userRepository.count({
+          where: {
+            role: 'student',
+            createdAt: Between(
+              new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1),
+              new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+            ),
+          },
+        }),
+      ]);
 
-      // Count all student accounts in the system so the dashboard reflects real data.
-      const totalStudents = await this.userRepository.count({
-        where: { role: 'student' },
-      });
-
-      // Get total videos for this teacher
-      const totalVideos = await this.videoRepository.count({
-        where: { teacherId },
-      });
-
-      // Get monthly revenue (current month, approved payments)
+      // Calculate monthly revenue (current month, approved payments)
       const now = new Date();
       const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-
-      const monthlyPayments = await this.paymentRepository.find({
-        where: {
-          status: 'completed',
-          approvalStatus: 'approved',
-        },
-      });
 
       const monthlyRevenue = monthlyPayments
         .filter((payment) => {
@@ -98,20 +114,6 @@ export class StatsService {
       const revenueTrend = lastMonthRevenue > 0
         ? Math.round(((monthlyRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)
         : (monthlyRevenue > 0 ? 100 : 0);
-
-      const currentMonthStudents = await this.userRepository.count({
-        where: {
-          role: 'student',
-          createdAt: Between(currentMonthStart, currentMonthEnd),
-        },
-      });
-
-      const lastMonthStudents = await this.userRepository.count({
-        where: {
-          role: 'student',
-          createdAt: Between(lastMonthStart, lastMonthEnd),
-        },
-      });
 
       const studentTrend = lastMonthStudents > 0
         ? Math.round(((currentMonthStudents - lastMonthStudents) / lastMonthStudents) * 100)

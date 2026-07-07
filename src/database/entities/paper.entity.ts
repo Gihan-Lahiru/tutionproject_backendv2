@@ -35,6 +35,9 @@ export class Paper {
   filePublicId?: string;
 
   @Column('text', { nullable: true })
+  thumbnail_url?: string;
+
+  @Column('text', { nullable: true })
   teacherId?: string;
 
   @CreateDateColumn()

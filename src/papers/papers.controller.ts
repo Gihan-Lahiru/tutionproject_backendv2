@@ -9,11 +9,12 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  UploadedFiles,
   Res,
   Req,
   NotFoundException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FileFieldsInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { DashboardAccessGuard } from '../common/guards/dashboard-access.guard';
 import { PapersService } from './papers.service';
@@ -29,12 +30,27 @@ export class PapersController {
   ) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'file', maxCount: 1 },
+      { name: 'thumbnail', maxCount: 1 },
+    ]),
+  )
   async upload(
-    @UploadedFile() file: any,
+    @UploadedFiles() files: { file?: any[]; thumbnail?: any[] },
     @Body() uploadDto: { title: string; grade?: string; type?: string; topic?: string; classId?: string },
   ) {
-    return this.papersService.upload(file, uploadDto.title, uploadDto.grade, uploadDto.type, uploadDto.topic, uploadDto.classId);
+    const uploadedFile = files.file?.[0];
+    const thumbnailFile = files.thumbnail?.[0];
+    return this.papersService.upload(
+      uploadedFile,
+      uploadDto.title,
+      uploadDto.grade,
+      uploadDto.type,
+      uploadDto.topic,
+      uploadDto.classId,
+      thumbnailFile,
+    );
   }
 
   @Get()

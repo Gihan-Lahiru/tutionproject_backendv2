@@ -22,8 +22,18 @@ export class PapersService {
     private eventEmitter: EventEmitter2,
   ) {}
 
-  async upload(file: any, title: string, grade?: string, type?: string, topic?: string, classId?: string) {
+  async upload(file: any, title: string, grade?: string, type?: string, topic?: string, classId?: string, thumbnailFile?: any) {
     const uploadResult = await this.uploadService.uploadFile(file, 'tuition_sir/papers');
+    let thumbnailUrl = '';
+
+    if (thumbnailFile) {
+      try {
+        const thumbnailResult = await this.uploadService.uploadFile(thumbnailFile, 'tuition_sir/paper_thumbnails');
+        thumbnailUrl = (thumbnailResult as any).secure_url;
+      } catch (err) {
+        console.error('Failed to upload paper thumbnail:', err);
+      }
+    }
 
     const paper = this.paperRepository.create({
       id: uuid(),
@@ -35,6 +45,7 @@ export class PapersService {
       fileUrl: (uploadResult as any).secure_url,
       filePublicId: (uploadResult as any).public_id,
       originalName: (uploadResult as any).original_name || file.originalname,
+      thumbnail_url: thumbnailUrl || null,
     });
     const saved = await this.paperRepository.save(paper);
 

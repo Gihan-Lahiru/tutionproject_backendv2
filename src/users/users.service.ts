@@ -59,11 +59,44 @@ export class UsersService {
       password: hashedPassword,
     });
 
-    return this.userRepository.save(user);
+    const savedUser = (await this.userRepository.save(user)) as unknown as User;
+
+    // Handle Class enrollment for student creation
+    if (savedUser.role === 'student' && userData.tuition_class) {
+      const classId = userData.tuition_class;
+      const manager = this.userRepository.manager;
+      const targetClass = await manager.query('SELECT id FROM classes WHERE id = ?', [classId]);
+      if (targetClass && targetClass.length > 0) {
+        await manager.query('INSERT INTO class_students (classesId, usersId) VALUES (?, ?)', [classId, savedUser.id]);
+      }
+    }
+
+    return savedUser;
   }
 
   async update(id: string, updateUserDto: any) {
     const user = await this.findById(id);
+    
+    // Handle Class enrollment if tuition_class is updated for a student
+    if (user.role === 'student' && 'tuition_class' in updateUserDto) {
+      const classId = updateUserDto.tuition_class;
+      
+      // Get entity manager to directly update the class_students relation table
+      const manager = this.userRepository.manager;
+      
+      // Remove student from all classes first to ensure clean reassignment
+      await manager.query('DELETE FROM class_students WHERE usersId = ?', [id]);
+      
+      // If a valid class is chosen, enroll them
+      if (classId) {
+        // Double check class exists
+        const targetClass = await manager.query('SELECT id FROM classes WHERE id = ?', [classId]);
+        if (targetClass && targetClass.length > 0) {
+          await manager.query('INSERT INTO class_students (classesId, usersId) VALUES (?, ?)', [classId, id]);
+        }
+      }
+    }
+
     Object.assign(user, updateUserDto);
     return this.userRepository.save(user);
   }
